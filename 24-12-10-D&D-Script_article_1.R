@@ -36,6 +36,12 @@ library(plotly)
 library(htmlwidgets)
 
 # Définir le répertoire de travail en fonction du chercheur
+researcher <- "adenieul"
+if (researcher == "adenieul") {
+  setwd("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")
+} else {
+  setwd(paste0("C:/Users/", researcher, "/Owncloud/TI Dijon/donnees"))
+}
 
 # Chargement des données
 sgsdata <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichier_traitement/sgsdata.xlsx")
@@ -46,116 +52,118 @@ sgsdata$cheque_UC <- sgsdata$cheque_theo / sgsdata$UC_TI
 sgsdata <- sgsdata %>%
   mutate(
     across(
-      contains("_prix_kg"),
+      matches("_prix_kg|Si\\.noncombien\\.de\\.fois\\.la\\.semaine\\.derniere\\.|Gapillage\\.produits\\.non\\.entames|Epicerie|Surgelé"),
       ~ replace_na(.x, 0)
     )
   )
+
 ## Analyse "Carnet"------------
 
 ##COMPLIANCE ------------------------------
+#Prop montant théorique saisie
+##result_comp2 <- sgsdata %>%
+##  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
+##            Periode ==1 ) #& Campagne ==1 )
+##
+#mean(result_comp2$Prop_montant_theorique_saisie)
+
+result_comp2 <- sgsdata %>%
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
+           Campagne ==2 &  Periode ==1   &        Prop_montant_theorique_saisie >= 0.3 &
+          Prop_montant_theorique_saisie <= 1.7
+           )
 
 
-#result_comp2 <- sgsdata %>%
-#  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
-#           Campagne ==2 &  Periode ==1  &        Prop_montant_theorique_saisie >= 0.3 &
-#           Prop_montant_theorique_saisie <= 1.7
-#           )
-#
-#mean(result_comp2$Compliant_booklet)
-#
-#result_comp2$comp_carnet <- ifelse(
-#  result_comp2$compliance >= 0.7 & 
-#    result_comp2$Prop_montant_theorique_saisie >= 0.3 & 
-#    result_comp2$Prop_montant_theorique_saisie <= 1.7,
-#  1, 
-#  0
-#)
-#
-#mean(result_comp2$comp_carnet)
-#
-##result_comp2$Les.avez.vous.utilises. == "Oui certains"
-#result_comp2$Les.avez.vous.utilises.2 <- ifelse((result_comp2$Les.avez.vous.utilises. == "Oui tous" ),(1),(0))
-#mean(result_comp2$Les.avez.vous.utilises.2, na.rm=TRUE)
-#result_comp2$utilisation_FFQ <- ifelse(( result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumes;Légumineuses"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumes"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumes;Légumineuses"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumineuses"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumes"|
-#                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumineuses"),(1),(0))
-#mean(result_comp2$utilisation_FFQ, na.rm=TRUE)
-#result_comp2$limitation_FFQ <- ifelse((result_comp2$Les.cheques.que.vous.avez.reçus.etaient.ils.limites.a.certaines.categories.de.produits.=="Oui"),(1),(0))
-#mean(result_comp2$limitation_FFQ, na.rm=TRUE)
-#
-#result_comp2$Comp_FFQ <- ifelse(( result_comp2$utilisation_FFQ ==1 & result_comp2$limitation_FFQ ==1 ),(1),(0))
-#result_comp2$Comp_FFQ <- ifelse(( is.na(result_comp2$Comp_FFQ) ),(0),(result_comp2$Comp_FFQ))
-#
-#mean(result_comp2$Comp_FFQ)
-#
-#
-#cor(result_comp2$comp_carnet, result_comp2$Comp_FFQ, method = "pearson")
-##result_comp2$utilisation_FFQ==1 & 
-#library(vcd)
-#tbl <- table(result_comp2$comp_carnet, result_comp2$Comp_FFQ)
-#assocstats(tbl)$phi
-#
-#result_comp2$Comp_FFQ <- factor(result_comp2$Comp_FFQ)
-#result_comp2$comp_carnet <- factor(result_comp2$comp_carnet)
-#
-#confusion_mat <- table(result_comp2$Comp_FFQ,result_comp2$comp_carnet)
-#count_zero <- sum(result_comp2$comp_carnet == 0)
-#
-## Extraire les éléments de la matrice
-#true_positive <- confusion_mat[2, 2]
-#true_negative <- confusion_mat[1, 1]
-#false_positive <- confusion_mat[1, 2]
-#false_negative <- confusion_mat[2, 1]
-#
-## Calculer l'exactitude
-#accuracy <- (true_positive + true_negative) / sum(confusion_mat)
-#print(paste("Accuracy: ", accuracy))
-#
-## Calculer la sensibilité (recall)
-#sensitivity <- true_positive / (true_positive + false_negative)
-#print(paste("Sensitivity: ", sensitivity))
-#
-## Calculer la spécificité
-#specificity <- true_negative / (true_negative + false_positive)
-#print(paste("Specificity: ", specificity))
-#
-##Calculer la précision
-#precision <- true_positive / (true_positive + false_positive)
-#print(paste("precision: ", precision))
-#
-## Estimer la corrélation
-#correlation <- cor(as.numeric(result_comp2$Comp_FFQ),as.numeric(result_comp2$comp_carnet))
-#print(paste("Correlation: ", correlation))
-#
-#median(result_comp2$Compliant_booklet)
-#median(result_comp2$compliance)
-#
-#result_comp2 %>%
-#  group_by(Comp_FFQ) %>%
-#  summarise(moyenne_compliance = mean(compliance, na.rm = TRUE))
+result_comp2$comp_carnet <- ifelse(
+  result_comp2$compliance >= 0.7 & 
+    result_comp2$Prop_montant_theorique_saisie >= 0.3 & 
+    result_comp2$Prop_montant_theorique_saisie <= 1.7,
+  1, 
+  0
+)
 
-sgsdata$compliance <- ifelse((sgsdata$Campagne==1 & sgsdata$Compliant_FFQ ==1),(0.762), (sgsdata$compliance))
-sgsdata$compliance <- ifelse((sgsdata$Campagne==1 & sgsdata$Compliant_FFQ !=1),( 0.544), (sgsdata$compliance))
+result_comp2 %>%
+  count(comp_carnet) %>%
+  mutate(prop = n / sum(n))
 
 
-# Sous-ensemble des données pour Carnet
+
+
+
+#result_comp2$Les.avez.vous.utilises. == "Oui certains"
+result_comp2$Les.avez.vous.utilises.2 <- ifelse((result_comp2$Les.avez.vous.utilises. == "Oui tous" ),(1),(0))
+mean(result_comp2$Les.avez.vous.utilises.2, na.rm=TRUE)
+result_comp2$utilisation_FFQ <- ifelse(( result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumes;Légumineuses"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumes"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumes;Légumineuses"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits;Légumineuses"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Fruits"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumes"|
+                                           result_comp2$Qu.avez.vous.achete.avec.=="Légumineuses"),(1),(0))
+mean(result_comp2$utilisation_FFQ, na.rm=TRUE)
+result_comp2$limitation_FFQ <- ifelse((result_comp2$Les.cheques.que.vous.avez.reçus.etaient.ils.limites.a.certaines.categories.de.produits.=="Oui"),(1),(0))
+mean(result_comp2$limitation_FFQ, na.rm=TRUE)
+
+result_comp2$Comp_FFQ <- ifelse(( result_comp2$utilisation_FFQ ==1 & result_comp2$limitation_FFQ ==1 ),(1),(0))
+result_comp2$Comp_FFQ <- ifelse(( is.na(result_comp2$Comp_FFQ) ),(0),(result_comp2$Comp_FFQ))
+
+mean(result_comp2$Comp_FFQ)
+
+
+cor(result_comp2$comp_carnet, result_comp2$Comp_FFQ, method = "pearson")
+#result_comp2$utilisation_FFQ==1 & 
+library(vcd)
+tbl <- table(result_comp2$comp_carnet, result_comp2$Comp_FFQ)
+assocstats(tbl)$phi
+
+result_comp2$Comp_FFQ <- factor(result_comp2$Comp_FFQ)
+result_comp2$comp_carnet <- factor(result_comp2$comp_carnet)
+
+confusion_mat <- table(result_comp2$Comp_FFQ,result_comp2$comp_carnet)
+count_zero <- sum(result_comp2$comp_carnet == 0)
+
+# Extraire les éléments de la matrice
+true_positive <- confusion_mat[2, 2]
+true_negative <- confusion_mat[1, 1]
+false_positive <- confusion_mat[1, 2]
+false_negative <- confusion_mat[2, 1]
+
+# Calculer l'exactitude
+accuracy <- (true_positive + true_negative) / sum(confusion_mat)
+print(paste("Accuracy: ", accuracy))
+
+# Calculer la sensibilité (recall)
+sensitivity <- true_positive / (true_positive + false_negative)
+print(paste("Sensitivity: ", sensitivity))
+
+# Calculer la spécificité
+specificity <- true_negative / (true_negative + false_positive)
+print(paste("Specificity: ", specificity))
+
+#Calculer la précision
+precision <- true_positive / (true_positive + false_positive)
+print(paste("precision: ", precision))
+
+# Estimer la corrélation
+correlation <- cor(as.numeric(result_comp2$Comp_FFQ),as.numeric(result_comp2$comp_carnet))
+print(paste("Correlation: ", correlation))
+
+median(result_comp2$Compliant_booklet)
+median(result_comp2$compliance)
+
+result_comp2 %>%
+  group_by(Comp_FFQ) %>%
+  summarise(compliance = mean(compliance, na.rm = TRUE))
+
+sgsdata$compliance <- ifelse((sgsdata$Campagne==1 & sgsdata$Compliant_FFQ ==1),(0.794), (sgsdata$compliance))
+sgsdata$compliance <- ifelse((sgsdata$Campagne==1 & sgsdata$Compliant_FFQ !=1),(0.632), (sgsdata$compliance))
+
+
+## Sous-ensemble des données pour Carnet
 sgsdata_IT <- sgsdata %>%
-  filter(Campagne ==1 & !is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 & Periode ==1 )
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" )
 
-mean(sgsdata_IT$pourcentage_remboursé_avant_la_fin)
-#87% des chèques saisis en général 
-#42% campagne 1
-
-mean(sgsdata_IT$compliance)
-#0.8646057
-#FFQ comp : 0.7623008
-#FFQ pas comp : 0.5448754
-
-#VERIF des chiffres de la compliance avant application des filtres  
+##VERIF des chiffres de la compliance avant application des filtres  
 verif <- sgsdata_IT %>%
   filter(
     Traitement == 1,
@@ -170,7 +178,7 @@ verif <- sgsdata_IT %>%
       Compliant_booklet >= 0.7 &
         Prop_montant_theorique_saisie >= 0.3 &
         Prop_montant_theorique_saisie <= 1.7
-     # utilisation2_FFQ == 1& limitation_FFQ == 1
+      #utilisation2_FFQ == 1& limitation_FFQ == 1
     ]),
     ratio = n_sup_0_7 / total
   )
@@ -214,7 +222,7 @@ for (filter_name in names(filter_conditions)) {
       "Prix tot eligible" = feols(M0 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Produits éligibles [g/d/cu]" = feols(PVS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Fruits / Vegetables [g/d/cu]" = feols(FV_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Fruits [g/d/cu]"              = feols(FRUITS_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Fruits [g/d/cu]"              = feols(FRUITS_POIDS ~ Traitement | Identifiant + Periode, data = subset_data),
       "Dry fruits [g/d/cu]"          = feols(FRUITS_SECS_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Nuts [g/d/cu]"                = feols(NOIX_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Vegetables [g/d/cu]"          = feols(LEGUMES_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
@@ -244,40 +252,40 @@ for (filter_name in names(filter_conditions)) {
       "MER [% excess/2000 Kcal/d/cu]"   = feols(MER ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Total caloric intake [Kcal/d/cu]" = feols(SOMME_POIDS_KCAL ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      
+      "Total weight without bev [Kg/cu]"= feols(SOMME_POIDS_HORS_BOISSON ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Carbon footprint [gCO2/Kg/d/cu]" = feols(climat_env ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "HENI"= feols(HENI_TOT ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Prot"= feols(t_ratio_prot~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Fiber" = feols(t_ratio_fibre~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Lino" = feols(t_ratio_lino	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "alphaline"= feols(t_ratio_alphalino~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "dha"= feols(t_ratio_dha~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "potassium" = feols(t_ratio_potassium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "calcium"= feols( t_ratio_calcium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "selenium"= feols(t_ratio_selenium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "iode"= feols(t_ratio_iode	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_d"= feols(t_ratio_vit_d	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_c" = feols( t_ratio_vit_c	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b2"= feols(t_ratio_vit_b2~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b12"= feols(t_ratio_vit_b12	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b9"= feols( t_ratio_vit_b9 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "magnesium"= feols( t_ratio_magnesium ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "fer"= feols( t_ratio_fer	 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "cuivre"= feols(  t_ratio_cuivre ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "zinc"= feols( t_ratio_zinc~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_a"= feols( t_ratio_vit_a	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_e"= feols(  t_ratio_vit_e	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b1"= feols( t_ratio_vit_b1~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b3"= feols(  t_ratio_vit_b3~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b6"= feols( t_ratio_vit_b6 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "ags"= feols( t_ratio_ags	 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "sodium"= feols(  t_ratio_sodium ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "sucre_aj"= feols( t_ratio_sucre_aj ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Poids_eligible"= feols( q0 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Prix_unitaire_eligible"= feols(p0 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant)
-                                      
-    ) 
-    
-  
+      "Prix_unitaire_eligible"= feols(p0 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "White ham"= feols(JAMBON_BLANC_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Dairy dessert"= feols(DESSERTS_LACTES_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Pork"= feols(PORC_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Water"= feols(EAU_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Cold cuts excluding white ham [€/Kg]"= feols(CHARCUTERIE_HORS_JB_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Sauces[€/Kg]"= feols(SAUCES_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Sugary sodas [€/Kg]"= feols(SODAS_SUCRES_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Salted snacks [€/Kg]"= feols(SNACKS_AUTRES_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Fruit juice [€/Kg]"= feols(FRUITS_JUS_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Dairy product [€/Kg]"= feols(LAITAGES_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Fish[€/Kg]"= feols(POISSONS_prix_kg ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Gaspillage restes"= feols( Si.noncombien.de.fois.la.semaine.derniere. ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Gapillage.produits.non.entames"= feols( Gapillage.produits.non.entames ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Fresh fruits"= feols(FRUITS_Frais_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Canned fruits"= feols(FRUITS_Conserve_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Mashed fruits"= feols(FRUITS_Purée_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Frozen fruits"= feols(FRUITS_Surgelé_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Fresh Vegetables"= feols(LEGUMES_Frais_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Canned Vegetables"= feols(LEGUMES_Conserve_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Soup vegetables"= feols(LEGUMES_Soupe_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Mashed vegetables"= feols(LEGUMES_Purée_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Frozen vegetables"= feols(LEGUMES_Surgelé_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Canned legumes"= feols(LEG_SECS_Conserve_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Prepared legumes"= feols(LEG_SECS_Préparation_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Dried legumes"= feols(LEG_SECS_Sec_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Soup legumes"= feols(LEG_SECS_Soupe_POIDS ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant)
+      ) 
+
     # Récupération des résultats sous forme de data.frame
     model_summary <- modelsummary(fixed_models, output = "data.frame", 
                                   gof_omit = "LogLik|Deviance|Adj.R2|FE|R2 Within|Std.Errors",
@@ -351,6 +359,13 @@ models_carnets <- model_summary
 
 
 
+ids_filtrés <- sgsdata_IT %>%
+  filter(Periode == 0, Campagne==1, voie_de_recrutement=="Episourire" )
+mean(ids_filtrés$FV_POIDS)
+#0.3095044 (Epimut)
+#0.3118102 (EPisourire )
+
+
 ## Analyse "FFQ"---------------------
 
 # Sous-ensemble des données pour FFQ
@@ -378,27 +393,6 @@ filter_conditions <- list(
   "TR" = ffqdata_TR,
   "LE" = ffqdata_LE
 )
-
-
-# Si besoin, adaptez le nom de la colonne de groupe (ici "group")
-counts_list <- lapply(filter_conditions, function(df) {
-  # calcule la table des effectifs par groupe
-  tbl <- table(df$group)
-  # transforme en data.frame pour plus de lisibilité
-  data.frame(
-    Dataset   = deparse(substitute(df)),
-    Group     = as.integer(names(tbl)),
-    Count     = as.integer(tbl)/ 2,
-    row.names = NULL
-  )
-})
-222+215 = 437*2
-222+102 = 324
-58+46 = 104
-# combine tous les petits data.frames en un seul
-counts_df <- do.call(rbind, counts_list)
-
-print(counts_df)
 
 
 
@@ -434,37 +428,9 @@ for (filter_name in names(filter_conditions)) {
       "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "HENI" = feols(HENI_TOT ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
       "Carbon footprint [gCO2/Kg/d/cu]" = feols(climat_env ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Prot"= feols(t_ratio_prot~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Fiber" = feols(t_ratio_fibre~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "Lino" = feols(t_ratio_lino	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "alphaline"= feols(t_ratio_alphalino~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "dha"= feols(t_ratio_dha~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "potassium" = feols(t_ratio_potassium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "calcium"= feols( t_ratio_calcium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "selenium"= feols(t_ratio_selenium	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "iode"= feols(t_ratio_iode	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_d"= feols(t_ratio_vit_d	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_c" = feols( t_ratio_vit_c	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b2"= feols(t_ratio_vit_b2~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b12"= feols(t_ratio_vit_b12	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b9"= feols( t_ratio_vit_b9 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "magnesium"= feols( t_ratio_magnesium ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "fer"= feols( t_ratio_fer	 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "cuivre"= feols(  t_ratio_cuivre ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "zinc"= feols( t_ratio_zinc~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_a"= feols( t_ratio_vit_a	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_e"= feols(  t_ratio_vit_e	~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b1"= feols( t_ratio_vit_b1~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b3"= feols(  t_ratio_vit_b3~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "vit_b6"= feols( t_ratio_vit_b6 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "ags"= feols( t_ratio_ags	 ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "sodium"= feols(  t_ratio_sodium ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
-      "sucre_aj"= feols( t_ratio_sucre_aj ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant)
-      
-
-
+      "Gaspillage.restes." = feols(Si.noncombien.de.fois.la.semaine.derniere. ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant),
+      "Gapillage.produits.non.entames" = feols(Gapillage.produits.non.entames ~ Traitement | Identifiant + Periode, data = subset_data, vcov = ~Identifiant)
     )
-    
     model_summary <- modelsummary(fixed_models, output = "data.frame", 
                                   gof_omit = "LogLik|Deviance|Adj.R2|FE|R2 Within|Std.Errors",
                                   statistic = c("std.error", "p.value"), fmt = "%.2g")
@@ -864,7 +830,21 @@ sgsdata_INT <- sgsdata_IT %>%
     SNACKS_AUTRES_POIDS_diff = SNACKS_AUTRES_POIDS[Periode == "1"] - SNACKS_AUTRES_POIDS[Periode == "0"],
     SODAS_SUCRES_POIDS_diff = SODAS_SUCRES_POIDS[Periode == "1"] - SODAS_SUCRES_POIDS[Periode == "0"],
     SODAS_LIGHT_POIDS_diff = SODAS_LIGHT_POIDS[Periode == "1"] - SODAS_LIGHT_POIDS[Periode == "0"],
-    VIANDE_ROUGE_POIDS_diff = VIANDE_ROUGE_POIDS[Periode == "1"] - VIANDE_ROUGE_POIDS[Periode == "0"]
+    VIANDE_ROUGE_POIDS_diff = VIANDE_ROUGE_POIDS[Periode == "1"] - VIANDE_ROUGE_POIDS[Periode == "0"],
+    FRUITS_SECS_prix_kg_diff = FRUITS_SECS_prix_kg[Periode == "1"] - FRUITS_SECS_prix_kg[Periode == "0"],
+    NOIX_prix_kg_diff = NOIX_prix_kg[Periode == "1"] - NOIX_prix_kg[Periode == "0"],
+    FRUITS_SECS_POIDS_diff = FRUITS_SECS_POIDS[Periode == "1"] - FRUITS_SECS_POIDS[Periode == "0"],
+    NOIX_POIDS_diff = NOIX_POIDS[Periode == "1"] - NOIX_POIDS[Periode == "0"],
+    SOMME_POIDS_HORS_BOISSON_diff = SOMME_POIDS_HORS_BOISSON[Periode == "1"] - SOMME_POIDS_HORS_BOISSON[Periode == "0"],
+    SODAS_LIGHT_POIDS_diff = SODAS_LIGHT_POIDS[Periode == "1"] - SODAS_LIGHT_POIDS[Periode == "0"],
+    EAU_POIDS_diff =  EAU_POIDS[Periode == "1"] - EAU_POIDS[Periode == "0"],
+    SODAS_SUCRES_prix_kg_diff = SODAS_SUCRES_prix_kg[Periode == "1"] - SODAS_SUCRES_prix_kg[Periode == "0"],
+    CHARCUTERIE_HORS_JB_prix_kg_diff = CHARCUTERIE_HORS_JB_prix_kg[Periode == "1"] - CHARCUTERIE_HORS_JB_prix_kg[Periode == "0"],
+    SNACKS_AUTRES_prix_kg_diff =  SNACKS_AUTRES_prix_kg[Periode == "1"] -  SNACKS_AUTRES_prix_kg[Periode == "0"],
+    POISSONS_prix_kg_diff = POISSONS_prix_kg[Periode == "1"] - POISSONS_prix_kg[Periode == "0"],
+    PORC_prix_kg_diff =PORC_prix_kg[Periode == "1"] - PORC_prix_kg[Periode == "0"],
+    FROMAGES_prix_kg_diff = FROMAGES_prix_kg[Periode == "1"] - FROMAGES_prix_kg[Periode == "0"],
+    FEC_NON_RAF_prix_kg_diff= FEC_NON_RAF_prix_kg[Periode == "1"] - FEC_NON_RAF_prix_kg[Periode == "0"]
   ) %>%
   ungroup()
 
@@ -890,11 +870,15 @@ for (filter_name in names(filter_conditions)) {
       "Eligibles [g/d/cu]" = feols(PVS_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Fruits / Vegetables [g/d/cu]" = feols(FV_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Fruits [g/d/cu]"              = feols(FRUITS_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[g/d/cu]"              = feols(FRUITS_SECS_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [g/d/cu]"              = feols(NOIX_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Vegetables [g/d/cu]"          = feols(LEGUMES_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Legumes [g/d/cu]"             = feols(LEG_SECS_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "p0"                 = feols(p0_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "FV [€/Kg]"                 = feols(FV_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Fruits [€/Kg]"                 = feols(FRUITS_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[€/Kg]"              = feols(FRUITS_SECS_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [€/Kg]"              = feols(NOIX_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      
       "Vegetable [€/Kg]"              =  feols(LEGUMES_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Legumes [€/Kg]"                = feols(LEG_SECS_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Meat [g/d/cu]"                = feols(VIANDES_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
@@ -913,9 +897,25 @@ for (filter_name in names(filter_conditions)) {
       "MER [% excess/2000 Kcal/d/cu]"   = feols(MER_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Total caloric intake [Kcal/d/cu]" = feols(SOMME_POIDS_KCAL_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Food budget [€/CU]" <- feols(depense_alim_uc_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Carbon footprint [gCO2/Kg/d/cu]" = feols(climat_env_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant)
-    )
+      "Total weight [Kg/cu]" = feols(SOMME_POIDS_HORS_BOISSON_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Food budget [€/CU]" = feols(depense_alim_uc_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      " climat_env_diff" = feols( climat_env_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      
+      "Light sodas [gCO2/Kg/d/cu]" = feols(SODAS_LIGHT_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Water [L/d/cu]" = feols(EAU_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Sugary sodas [K/d/cu]" = feols(SODAS_SUCRES_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cold cuts excluding white ham [€/Kg]" = feols(CHARCUTERIE_HORS_JB_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Other snacks [€/kg]" = feols(SNACKS_AUTRES_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fish [€/Kg]" = feols(POISSONS_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Pork [€/Kg]" = feols(PORC_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cheeses [€/kg]" = feols(FROMAGES_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Unrefined starches [€/kg]" = feols(FEC_NON_RAF_prix_kg_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant)
+      
+      
+    ) 
+
+    
+    
     
     model_summary <- modelsummary(fixed_models, output = "data.frame", 
                                   gof_omit = "LogLik|Deviance|Adj.R2|FE|R2 Within|Std.Errors",
@@ -982,7 +982,6 @@ model_summary_diff$Variable_Dépendante <- sub("_diff$", "", model_summary_diff$
 
 models_diff <- model_summary_diff
 #TEST
-#FV_POIDS <- feols(FV_POIDS_diff ~ as.factor(groupe) + Différentiel_aide + as.factor(groupe):Différentiel_aide |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant)
 
 ## Analyse d'hétérogénéité - Interaction avec Income_UC_INSEE--------------------
 filter_conditions <- list("Tous" = sgsdata_IT_filtered)
@@ -991,39 +990,55 @@ for (filter_name in names(filter_conditions)) {
   subset_data <- filter_conditions[[filter_name]]
   if(nrow(subset_data) > 0) {
     fixed_models <- list(
-      "M0"= feols(M0_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "PVS [g/d/cu]" = feols(PVS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "M0" = feols(M0_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Eligibles [g/d/cu]" = feols(PVS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits / Vegetables [g/d/cu]" = feols(FV_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits [g/d/cu]"              = feols(FRUITS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[g/d/cu]"              = feols(FRUITS_SECS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [g/d/cu]"              = feols(NOIX_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Vegetables [g/d/cu]"          = feols(LEGUMES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Legumes [g/d/cu]"             = feols(LEG_SECS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "FV [€/Kg]"                 = feols(FV_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits [€/Kg]"                 = feols(FRUITS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[€/Kg]"              = feols(FRUITS_SECS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [€/Kg]"              = feols(NOIX_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       
-      "Fruits / Vegetables [g/d/cu]" = feols(FV_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Fruits [g/d/cu]"              = feols(FRUITS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Vegetables [g/d/cu]"          = feols(LEGUMES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Legumes [g/d/cu]"             = feols(LEG_SECS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "p0"= feols(p0_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "FV [€/Kg]"                 = feols(FV_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Vegetable [€/Kg]"              =  feols(LEGUMES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Legumes [€/Kg]"                = feols(LEG_SECS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Meat [g/d/cu]"                = feols(VIANDES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Red meat/Pork [g/d/cu]"       = feols(VIANDE_ROUGE_PORC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cold cuts [g/d/cu]"           = feols(AUTRE_PDTS_ANIMAUX_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Chicken/eggs [g/d/cu]"        = feols(POULET_OEUFS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fish [g/d/cu]"                = feols(POISSONS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Prepared meal [g/d/cu]"       = feols(PLATS_PREP_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Starchy food [g/d/cu]"        = feols(FEC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Dairy products [g/d/cu]"      = feols(PDTS_LAITIERS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Added fats [g/d/cu]"          = feols(MG_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Discretionnary food [g/d/cu]"   = feols(PDTS_DISCRETIONNAIRES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Sugary sweet beverages [ml/d/cu]" = feols(SSB_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Alcohol [ml/d/cu]"            = feols(ALCOOL_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "MAR [% adequacy/ 2000 Kcal/d/cu]" = feols(MAR_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "MER [% excess/2000 Kcal/d/cu]"   = feols(MER_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Total caloric intake [Kcal/d/cu]" = feols(SOMME_POIDS_KCAL_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Total weight [Kg/cu]" = feols(SOMME_POIDS_HORS_BOISSON_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Food budget [€/CU]" = feols(depense_alim_uc_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "climat_env" = feols(climat_env_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
       
-       "Fruits [€/Kg]"                 = feols(FRUITS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Vegetable [€/Kg]"              =  feols(LEGUMES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Legumes [€/Kg]"                = feols(LEG_SECS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Meat [g/d/cu]"                = feols(VIANDES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Red meat/Pork [g/d/cu]"       = feols(VIANDE_ROUGE_PORC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Cold cuts [g/d/cu]"           = feols(AUTRE_PDTS_ANIMAUX_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Chicken/eggs [g/d/cu]"        = feols(POULET_OEUFS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Fish [g/d/cu]"                = feols(POISSONS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Prepared meal [g/d/cu]"       = feols(PLATS_PREP_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Starchy food [g/d/cu]"        = feols(FEC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Dairy products [g/d/cu]"      = feols(PDTS_LAITIERS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Added fats [g/d/cu]"          = feols(MG_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Discretionnary food [g/d/cu]"   = feols(PDTS_DISCRETIONNAIRES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Sugary sweet beverages [ml/d/cu]" = feols(SSB_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Alcohol [ml/d/cu]"            = feols(ALCOOL_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "MAR [% adequacy/ 2000 Kcal/d/cu]" = feols(MAR_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "MER [% excess/2000 Kcal/d/cu]"   = feols(MER_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Total caloric intake [Kcal/d/cu]" = feols(SOMME_POIDS_KCAL_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Food budget [€/CU]" <- feols(depense_alim_uc_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
-      "Carbon footprint [gCO2/Kg/d/cu]" = feols(climat_env_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant)
-    )
-    
+      
+      "Light sodas [gCO2/Kg/d/cu]" = feols(SODAS_LIGHT_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Water [L/d/cu]" = feols(EAU_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Sugary sodas [K/d/cu]" = feols(SODAS_SUCRES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cold cuts excluding white ham [€/Kg]" = feols(CHARCUTERIE_HORS_JB_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Other snacks [€/kg]" = feols(SNACKS_AUTRES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fish [€/Kg]" = feols(POISSONS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Pork [€/Kg]" = feols(PORC_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cheeses [€/kg]" = feols(FROMAGES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Unrefined starches [€/kg]" = feols(FEC_NON_RAF_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE |  as.factor(branche) , data = sgsdata_IT_filtered, vcov = ~Identifiant)
+      
+      
+    ) 
+
     model_summary <- modelsummary(fixed_models, output = "data.frame", 
                                   gof_omit = "LogLik|Deviance|Adj.R2|FE|R2 Within|Std.Errors",
                                   statistic = c("std.error", "p.value"), fmt = "%.2g")
@@ -1085,7 +1100,131 @@ model_summary_inc$Variable_Dépendante <- sub("_diff$", "", model_summary_inc$Va
 #}
 #model_summary_inc[] <- lapply(model_summary_inc, function(x) { if(is.numeric(x)) format(x, scientific = FALSE) else x })
 
+
 models_inc <- model_summary_inc
+
+
+
+
+
+## Analyse d'hétérogénéité - Interaction avec Income_UC_INSEE--------------------
+filter_conditions <- list("Tous" = sgsdata_IT_filtered)
+final_results <- data.frame()
+for (filter_name in names(filter_conditions)) {
+  subset_data <- filter_conditions[[filter_name]]
+  if(nrow(subset_data) > 0) {
+    fixed_models <- list(
+      "M0" = feols(M0_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Eligibles [g/d/cu]" = feols(PVS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits / Vegetables [g/d/cu]" = feols(FV_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits [g/d/cu]"              = feols(FRUITS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[g/d/cu]"              = feols(FRUITS_SECS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [g/d/cu]"              = feols(NOIX_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Vegetables [g/d/cu]"          = feols(LEGUMES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Legumes [g/d/cu]"             = feols(LEG_SECS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "FV [€/Kg]"                 = feols(FV_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits [€/Kg]"                 = feols(FRUITS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fruits secs[€/Kg]"              = feols(FRUITS_SECS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Noix [€/Kg]"              = feols(NOIX_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      
+      "Vegetable [€/Kg]"              =  feols(LEGUMES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Legumes [€/Kg]"                = feols(LEG_SECS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Meat [g/d/cu]"                = feols(VIANDES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Red meat/Pork [g/d/cu]"       = feols(VIANDE_ROUGE_PORC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cold cuts [g/d/cu]"           = feols(AUTRE_PDTS_ANIMAUX_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Chicken/eggs [g/d/cu]"        = feols(POULET_OEUFS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fish [g/d/cu]"                = feols(POISSONS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Prepared meal [g/d/cu]"       = feols(PLATS_PREP_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Starchy food [g/d/cu]"        = feols(FEC_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Dairy products [g/d/cu]"      = feols(PDTS_LAITIERS_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Added fats [g/d/cu]"          = feols(MG_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Discretionnary food [g/d/cu]"   = feols(PDTS_DISCRETIONNAIRES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Sugary sweet beverages [ml/d/cu]" = feols(SSB_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Alcohol [ml/d/cu]"            = feols(ALCOOL_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "MAR [% adequacy/ 2000 Kcal/d/cu]" = feols(MAR_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "MER [% excess/2000 Kcal/d/cu]"   = feols(MER_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Total caloric intake [Kcal/d/cu]" = feols(SOMME_POIDS_KCAL_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Solid energy density [kcal/100g/d/cu]" = feols(energy_densite_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Total weight [Kg/cu]" = feols(SOMME_POIDS_HORS_BOISSON_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Food budget [€/CU]" = feols(depense_alim_uc_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "climat_env" = feols(climat_env_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+  
+       "Light sodas [gCO2/Kg/d/cu]" = feols(SODAS_LIGHT_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Water [L/d/cu]" = feols(EAU_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Sugary sodas [K/d/cu]" = feols(SODAS_SUCRES_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cold cuts excluding white ham [€/Kg]" = feols(CHARCUTERIE_HORS_JB_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Other snacks [€/kg]" = feols(SNACKS_AUTRES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Fish [€/Kg]" = feols(POISSONS_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Pork [€/Kg]" = feols(PORC_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Cheeses [€/kg]" = feols(FROMAGES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant),
+      "Unrefined starches [€/kg]" = feols(FEC_NON_RAF_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE  , data = sgsdata_IT_filtered, vcov = ~Identifiant)
+      
+      
+    ) 
+    
+    model_summary <- modelsummary(fixed_models, output = "data.frame", 
+                                  gof_omit = "LogLik|Deviance|Adj.R2|FE|R2 Within|Std.Errors",
+                                  statistic = c("std.error", "p.value"), fmt = "%.2g")
+    model_summary$Selection <- filter_name
+    final_results <- bind_rows(final_results, model_summary)
+  }
+}
+
+terms_to_exclude <- c("Intercept", "Identifiant", "Temps", "Observations", "Std.Errors",
+                      "ICC", "R2 Adj.", "R2 Cond.", "R2", "AIC", "BIC", "RMSE")
+final_results <- final_results[!grepl(paste(terms_to_exclude, collapse = "|"), final_results$term), ]
+final_results <- final_results %>% filter(part != "gof") %>% select(-part, -Selection)
+
+model_summary_inc2 <- as.data.frame(t(final_results))
+new_header <- paste(model_summary_inc2[1, ], model_summary_inc2[2, ], sep = "_")
+colnames(model_summary_inc2) <- new_header
+model_summary_inc2 <- model_summary_inc2[-c(1,2), ]
+
+dep_vars <- sapply(fixed_models, function(model) all.vars(formula(model))[1])
+dep_vars_df <- data.frame(Variable_Dépendante = dep_vars, row.names = NULL)
+if(nrow(model_summary_inc) == length(dep_vars)) {
+  model_summary_inc2 <- cbind(dep_vars_df, model_summary_inc2)
+} else {
+  warning("Problème de correspondance entre model_summary_inc2 et dep_vars_df")
+}
+model_summary_inc2[] <- lapply(model_summary_inc2, function(x) { if(is.character(x)) gsub("[()]", "", x) else x })
+model_summary_inc2$Variable_Dépendante <- sub("_diff$", "", model_summary_inc2$Variable_Dépendante)
+
+#sgsdata0 <- subset(sgsdata_IT, Periode == 1, groupe ==0)
+#existence_and_means <- sapply(model_summary_inc$Variable_Dépendante, function(var) {
+#  if(var %in% colnames(sgsdata0)) {
+#    mean_value <- median(sgsdata0[[var]], na.rm = TRUE)
+#    return(c("OK", mean_value))
+#  } else {
+#    return(c("", NA))
+#  }
+#})
+#model_summary_inc$Mean_T0 <- as.numeric(existence_and_means[2, ])
+#model_summary_inc <- model_summary_inc %>% relocate(Mean_T0, .before = 1)
+#
+#colnames(model_summary_inc)
+#columns_to_scale <- c("Mean_T0",  "as.factor(groupe)1_estimate"   , "as.factor(groupe)1_std.error"  ,                         
+#                      "Income_UC_INSEE_estimate" ,                             
+#                      "Income_UC_INSEE_std.error" ,
+#                      "as.factor(groupe)1 × Income_UC_INSEE_estimate" , 
+#                      "as.factor(groupe)1 × Income_UC_INSEE_std.error")
+#rows_to_scale <- grepl("POIDS", model_summary_inc[, 2]) & model_summary_inc[, 2] != "SOMME_POIDS_KCAL"
+#for(col in columns_to_scale) {
+#  model_summary_inc[[col]] <- as.numeric(model_summary_inc[[col]])
+#}
+#model_summary_inc[rows_to_scale, columns_to_scale] <- model_summary_inc[rows_to_scale, columns_to_scale] * 1000
+#
+#model_summary_inc$Variable_Dépendante <- NULL
+#colnames(model_summary_inc) <- gsub("estimate", "Change (%)", colnames(model_summary_inc))
+#colnames(model_summary_inc) <- gsub("std.error", "Std.error (%)", colnames(model_summary_inc))
+#numeric_cols <- grep("Chang|error", colnames(model_summary_inc), value = TRUE)
+#for(col in numeric_cols) {
+#  model_summary_inc[[col]] <-(as.numeric(model_summary_inc[[col]]) / model_summary_inc$Mean_T0) * 100
+#}
+#model_summary_inc[] <- lapply(model_summary_inc, function(x) { if(is.numeric(x)) format(x, scientific = FALSE) else x })
+
+models_inc2 <- model_summary_inc2
+
 
 ## Affichage final des résultats------------------------
 print("Résultats - Interaction Différentiel_aide")
@@ -1106,21 +1245,19 @@ summary(lm(FV_POIDS~groupe*Income_UC_INSEE,data=data_diff))
 summary(lm(FV_POIDS~groupe*Campagne,data=data_diff))
 summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff))
 summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff))
-summary(feols(FV_POIDS~groupe*Différentiel_aide,data=data_diff))
-summary(feols(FV_POIDS~groupe*Différentiel_aide,data=data_diff, vcov ="Identifiant"))
 
 
 
-summary(lm(FV_POIDS~groupe*as.factor(aide_level),data=data_diff%>%filter(aide_level<=2)))
-summary(lm(FV_POIDS~groupe*as.factor(aide_level),data=data_diff))
-summary(lm(FV_POIDS~groupe*(Différentiel_aide<1.4),data=data_diff))
-summary(lm(FV_POIDS~groupe*FV_POIDS.x,data=data_diff))
-summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff%>%filter(voie_de_recrutement=="LE")))
-summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff[which(data_diff$Identifiant%in%unlist(ids_combines)),]))
-summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE, data=data_diff))
-summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Différentiel_aide + as.factor(groupe):Différentiel_aide, data=data_diff))
-summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Différentiel_aide + as.factor(groupe):Différentiel_aide, data=data_diff))
-
+#summary(lm(FV_POIDS~groupe*as.factor(aide_level),data=data_diff%>%filter(aide_level<=2)))
+#summary(lm(FV_POIDS~groupe*as.factor(aide_level),data=data_diff))
+#summary(lm(FV_POIDS~groupe*(Différentiel_aide<1.4),data=data_diff))
+#summary(lm(FV_POIDS~groupe*FV_POIDS.x,data=data_diff))
+#summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff%>%filter(voie_de_recrutement=="LE")))
+#summary(lm(FV_POIDS~groupe*Différentiel_aide,data=data_diff[which(data_diff$Identifiant%in%unlist(ids_combines)),]))
+#summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Income_UC_INSEE + as.factor(groupe):Income_UC_INSEE, data=data_diff))
+#summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Différentiel_aide + as.factor(groupe):Différentiel_aide, data=data_diff))
+#summary(lm(FV_POIDS~ as.factor(groupe) + as.factor(branche) + as.factor(groupe):as.factor(branche) + Différentiel_aide + as.factor(groupe):Différentiel_aide, data=data_diff))
+#
 ##PREDICTION ----------------------------------------------
 # --- Modèles estimés (exemple) ---
 
@@ -1192,7 +1329,18 @@ MAR <- feols(MAR_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe)
 MER <- feols(MER_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
 energy_densite <- feols(energy_densite_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
 Calories <- feols(SOMME_POIDS_KCAL_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
-Climat <- feols(climat_env_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+Climat <- feols(climat_env_diff~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+SODAS_LIGHT_POIDS_diff <- feols(SODAS_LIGHT_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+EAU_POIDS <- feols(EAU_POIDS_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+SODAS_SUCRES_prix_kg <- feols(SODAS_SUCRES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+CHARCUTERIE_HORS_JB_prix_kg <- feols(CHARCUTERIE_HORS_JB_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+SNACKS_AUTRES_prix_kg<- feols(SNACKS_AUTRES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+POISSONS_prix_kg <- feols(POISSONS_prix_kg_diff~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+PORC_prix_kg<- feols(PORC_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+FROMAGES_prix_kg <- feols(FROMAGES_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+FEC_NON_RAF_prix_kg <- feols(FEC_NON_RAF_prix_kg_diff~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+SOMME_POIDS_HORS_BOISSON <- feols(SOMME_POIDS_HORS_BOISSON_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
+NOIX_prix_kg              <- feols(NOIX_prix_kg_diff ~ as.factor(groupe) + Income_UC_INSEE  + as.factor(groupe):Income_UC_INSEE , data = subset_data, vcov = ~Identifiant)
 
 
 # --- Création des combinaisons de groupe pour la prédiction ---
@@ -1257,6 +1405,18 @@ new_data$MER <- predict(MER, newdata = new_data)
 new_data$energy_densite <- predict(energy_densite, newdata = new_data)
 new_data$Calories <- predict(Calories, newdata = new_data)
 new_data$Climat <- predict(Climat, newdata = new_data)
+new_data$SODAS_LIGHT_POIDS <- predict(SODAS_LIGHT_POIDS, newdata = new_data)
+new_data$EAU_POIDS <- predict(EAU_POIDS , newdata = new_data)
+new_data$SODAS_SUCRES_prix_kg <- predict(SODAS_SUCRES_prix_kg, newdata = new_data)
+new_data$CHARCUTERIE_HORS_JB_prix_kg <- predict(CHARCUTERIE_HORS_JB_prix_kg, newdata = new_data)
+new_data$SNACKS_AUTRES_prix_kg<- predict(SNACKS_AUTRES_prix_kg , newdata = new_data)
+new_data$POISSONS_prix_kg <- predict(POISSONS_prix_kg , newdata = new_data)
+new_data$PORC_prix_kg<- predict(PORC_prix_kg, newdata = new_data)
+new_data$FROMAGES_prix_kg <- predict(FROMAGES_prix_kg , newdata = new_data)
+new_data$FEC_NON_RAF_prix_kg <- predict(FEC_NON_RAF_prix_kg , newdata = new_data)
+new_data$SOMME_POIDS_HORS_BOISSON <- predict(SOMME_POIDS_HORS_BOISSON, newdata = new_data)
+new_data$NOIX_prix_kg             <- predict(NOIX_prix_kg, newdata = new_data)
+
 
 
 # --- Transformation des prédictions ---
@@ -1315,7 +1475,19 @@ new_data_clean <- new_data %>%
     fit_MER = MER,                        # aucune transformation
     fit_energy_densite = energy_densite,  # aucune transformation
     fit_Calories = Calories,              # aucune transformation
-    fit_Climat = Climat                   # aucune transformation
+    fit_Climat = Climat  ,                 # aucune transformation
+    fit_SODAS_LIGHT_POIDS = SODAS_LIGHT_POIDS* 1000,,
+    fit_EAU_POIDS = EAU_POIDS * 1000,,
+    fit_SODAS_SUCRES_prix_kg = SODAS_SUCRES_prix_kg ,
+    fit_CHARCUTERIE_HORS_JB_prix_kg = CHARCUTERIE_HORS_JB_prix_kg,
+    fit_SNACKS_AUTRES_prix_kg = SNACKS_AUTRES_prix_kg,
+    fit_POISSONS_prix_kg= POISSONS_prix_kg,
+    fit_PORC_prix_kg = PORC_prix_kg,
+    fit_FROMAGES_prix_kg = FROMAGES_prix_kg,
+    fit_FEC_NON_RAF_prix_kg = FEC_NON_RAF_prix_kg,
+    fit_SOMME_POIDS_HORS_BOISSON = SOMME_POIDS_HORS_BOISSON ,
+    fit_NOIX_prix_kg     = NOIX_prix_kg         
+    
   ) %>%
   # Supprimer les colonnes originales des prédictions
   select(-M0, p0,-FV, -FRUITS, -LEGUMES, -FRUITS_SECS, -NOIX, -LEG_SECS, -FRUITS_KG, -LEGUMES_KG, -LEG_SECS_KG, -VIANDES, -VIANDE_ROUGE_PORC,
@@ -1325,7 +1497,18 @@ new_data_clean <- new_data %>%
          -OEUFS_POIDS, -PDTS_SUCRES_POIDS, -PLATS_PREP_CARNES_POIDS, -PLATS_PREP_VEGETARIENS_POIDS, -POISSONS_POIDS,
          -PORC_POIDS, -POULET_POIDS, -QUICHES_PIZZAS_TARTES_SALEES_POIDS, -SAUCES_POIDS, -SNACKS_AUTRES_POIDS,
          -SODAS_SUCRES_POIDS, -SODAS_LIGHT_POIDS, -VIANDE_ROUGE_POIDS, -depense_alim_uc, -MAR, -MER, -energy_densite,
-         -Calories, -Climat)
+         -Calories, -Climat,
+         - SODAS_LIGHT_POIDS,
+        -EAU_POIDS ,
+         - SODAS_SUCRES_prix_kg ,
+         - CHARCUTERIE_HORS_JB_prix_kg,
+        - SNACKS_AUTRES_prix_kg,
+         - POISSONS_prix_kg,
+        -PORC_prix_kg,
+        - FROMAGES_prix_kg,
+        - FEC_NON_RAF_prix_kg,
+        -  SOMME_POIDS_HORS_BOISSON ,
+       - NOIX_prix_kg     )
 
 # --- Création du tableau résumé final ---
 predict_table <- new_data_clean %>%
@@ -1382,7 +1565,18 @@ predict_table <- new_data_clean %>%
     MER = paste0(fit_MER, 2),
     energy_densite = paste0(fit_energy_densite, 2),
     Calories = paste0(fit_Calories, 2),
-    Climat = paste0(fit_Climat, 2)
+    Climat = paste0(fit_Climat, 2),
+    SODAS_LIGHT_POIDS = paste0(fit_SODAS_LIGHT_POIDS, 2),
+    EAU_POIDS = paste0(fit_EAU_POIDS, 2),
+    SODAS_SUCRES_prix_kg =  paste0(fit_SODAS_SUCRES_prix_kg, 2),
+    CHARCUTERIE_HORS_JB_prix_kg = paste0(fit_CHARCUTERIE_HORS_JB_prix_kg, 2),
+    SNACKS_AUTRES_prix_kg = paste0(fit_SNACKS_AUTRES_prix_kg, 2),
+    POISSONS_prix_kg = paste0(fit_POISSONS_prix_kg, 2),
+    PORC_prix_kg = paste0(fit_PORC_prix_kg , 2),
+    FROMAGES_prix_kg = paste0(fit_FROMAGES_prix_kg , 2),
+    FEC_NON_RAF_prix_kg = paste0(fit_FEC_NON_RAF_prix_kg , 2),
+    SOMME_POIDS_HORS_BOISSON = paste0(fit_SOMME_POIDS_HORS_BOISSON , 2),
+    NOIX_prix_kg = paste0(fit_NOIX_prix_kg , 2)
   ) %>%
   # Réorganisation des colonnes (commençant par les identifiants)
   select(groupe, Income_UC_INSEE,  M0, p0, FV, FRUITS, FRUITS_SECS, NOIX, LEGUMES, LEG_SECS, FRUITS_KG,
@@ -1394,7 +1588,17 @@ predict_table <- new_data_clean %>%
          PLATS_PREP_CARNES_POIDS, PLATS_PREP_VEGETARIENS_POIDS, POISSONS_POIDS, PORC_POIDS,
          POULET_POIDS, QUICHES_PIZZAS_TARTES_SALEES_POIDS, SAUCES_POIDS, SNACKS_AUTRES_POIDS,
          SODAS_SUCRES_POIDS, SODAS_LIGHT_POIDS, VIANDE_ROUGE_POIDS, depense_alim_uc, MAR, MER,
-         energy_densite, Calories, Climat) %>%
+         energy_densite, Calories, Climat,           SODAS_LIGHT_POIDS,
+         EAU_POIDS ,
+         SODAS_SUCRES_prix_kg ,
+         CHARCUTERIE_HORS_JB_prix_kg,
+         SNACKS_AUTRES_prix_kg,
+         POISSONS_prix_kg,
+         PORC_prix_kg,
+         FROMAGES_prix_kg,
+         FEC_NON_RAF_prix_kg,
+         SOMME_POIDS_HORS_BOISSON ,
+         NOIX_prix_kg ) %>%
   arrange(groupe, Income_UC_INSEE)
 
 
@@ -1433,7 +1637,17 @@ predict_table_bis <- predict_table_bis%>%
   select(-c(Income_UC_INSEE, FV, FRUITS_KG,
             LEGUMES_KG, LEG_SECS_KG, VIANDES, VIANDE_ROUGE_PORC, AUTRE_PDTS_ANIMAUX,
             POULET_OEUFS, POISSONS, FEC, PDTS_LAITIERS, MG, PLATS_PREP, SSB,
-            depense_alim_uc, MAR, MER, energy_densite, Calories))
+            depense_alim_uc, MAR, MER, energy_densite, Calories,          
+            EAU_POIDS ,
+            SODAS_SUCRES_prix_kg ,
+            CHARCUTERIE_HORS_JB_prix_kg,
+            SNACKS_AUTRES_prix_kg,
+            POISSONS_prix_kg,
+            PORC_prix_kg,
+            FROMAGES_prix_kg,
+            FEC_NON_RAF_prix_kg,
+            SOMME_POIDS_HORS_BOISSON ,
+            NOIX_prix_kg ))
 
 ##Extraire les données pour HENI 
 desired_order <- c("CAFE_THE_POIDS", "CEREALES_PD_POIDS", "CHARCUTERIE_HORS_JB_POIDS",
@@ -1484,12 +1698,12 @@ results_list[[branch_name]] <- predict_table_long
 results_list_bis[[branch_name]] <- predict_table
 }
 
-
-
 # Affichage des résultats pour chaque branche
 result_TRUST <-  results_list$Branche_0
 result_AC <-  results_list$Branche_1
 result_TOT <-  results_list_bis$Branche_tot
+result_TOT_TRUST <-  results_list_bis$Branche_0
+result_TOT_AC <-  results_list_bis$Branche_1
 
 
 
@@ -1873,12 +2087,12 @@ result_all <- bind_rows(result_IT, result_TR, result_LE, ) %>%
 # Sous-ensemble des données pour Carnet
 
 sgsdata_IT <- sgsdata %>%
-  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==1  & Identifiant != "6348-Epicerie1" )
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==1  )
 
 ## Sélection des groupes pour le filtrage
 #ids_groupe0 <- sgsdata_IT %>% filter(groupe == 0 ) %>% select(Identifiant) %>% distinct()
 #ids_groupe1_camp1 <- sgsdata_IT %>% 
-#  filter(groupe == 1, Campagne == 1, utilisation2_FFQ == 1, limitation_FFQ == 1 , Identifiant != "6348-Epicerie1") %>% 
+#  filter(groupe == 1, Campagne == 1, utilisation2_FFQ == 1, limitation_FFQ == 1 , Identifiant != "6348-Episourire") %>% 
 #  select(Identifiant) %>% distinct()
 #ids_groupe1_camp2 <- sgsdata_IT %>% 
 #  filter(groupe == 1, Campagne == 2,
@@ -1890,7 +2104,7 @@ sgsdata_IT <- sgsdata %>%
 #ids_combines <- bind_rows(ids_groupe0, ids_groupe1_camp1, ids_groupe1_camp2)
 #sgsdata_TR <- sgsdata_IT %>% semi_join(ids_combines, by = "Identifiant")
 
-#sgsdata_LE <- subset(sgsdata_IT, voie_de_recrutement == "LE", Identifiant != "6348-Epicerie1")
+#sgsdata_LE <- subset(sgsdata_IT, voie_de_recrutement == "LE", Identifiant != "6348-Episourire")
 
 sgsdata_TR <- sgsdata %>%
   filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==2  & voie_de_recrutement == "PS" )
@@ -2045,7 +2259,7 @@ calc_did <- function(data, label) {
 # 3. Appliquer à chaque sous-jeu et obtenir un data.frame de 3 lignes
 did_refs <- imap_dfr(list_data, calc_did)
 
-# 4. Joindre avec votre tableau final (qui a colonne Groupe = "Tous"/"TR"/"LE")
+# 4. Joindre avec tableau final (qui a colonne Groupe = "Tous"/"TR"/"LE")
 resultats <- did_refs
 
 #TABLEAU DES DIFF--------------------------------
@@ -2127,13 +2341,17 @@ df_list <- list(
   models_ffq       = models_ffq,
   models_diff      = models_diff,
   models_inc       = models_inc,
+  models_inc2       = models_inc2,
+  
   result_TOT    = result_TOT,
   HENI_groupe      = models_carnets_HENI,
   result_TRUST_bis  = result_TRUST,
   result_AC_bis = result_AC,
   resultats = resultats,
   Atteinte_reco = result_all,
-  models_carnets_analyse = models_carnets_analyse
+  models_carnets_analyse = models_carnets_analyse,
+  result_TOT_TRUST = result_TOT_TRUST,
+  result_TOT_AC =result_TOT_AC
 )
 
 # Fonction qui tente de convertir une colonne en numérique si possible
@@ -2165,6 +2383,8 @@ cohen_results     <- df_list$cohen_results
 models_ffq        <- df_list$models_ffq
 models_diff       <- df_list$models_diff
 models_inc        <- df_list$models_inc
+models_inc2        <- df_list$models_inc2
+
 result_TOT     <- df_list$result_TOT
 models_carnets_HENI<- df_list$HENI_groupe
 result_TRUST <-  df_list$result_TRUST_bis 
@@ -2172,7 +2392,8 @@ result_AC <-  df_list$result_AC_bis
 result_all <-  df_list$Atteinte_reco 
 resultats <- df_list$resultats
 models_carnets_analyse <- df_list$models_carnets_analyse
-
+result_TOT_TRUST<- df_list$result_TOT_TRUST 
+result_TOT_AC<- df_list$result_TOT_AC
 
 
 # Puis vous pouvez écrire vos dataframes convertis dans le workbook
@@ -2197,6 +2418,9 @@ writeData(wb, sheet = "models_diff", models_diff, colNames = TRUE, rowNames = TR
 addWorksheet(wb, "models_inc")
 writeData(wb, sheet = "models_inc", models_inc, colNames = TRUE, rowNames = TRUE)
 
+addWorksheet(wb, "models_inc2")
+writeData(wb, sheet = "models_inc2", models_inc2, colNames = TRUE, rowNames = TRUE)
+
 addWorksheet(wb, "predict_table")
 writeData(wb, sheet = "predict_table", result_TOT, colNames = TRUE, rowNames = TRUE)
 
@@ -2217,6 +2441,14 @@ writeData(wb, sheet = "resultats", resultats, colNames = TRUE, rowNames = TRUE)
 
 addWorksheet(wb, "models_carnets_analyse")
 writeData(wb, sheet = "models_carnets_analyse", models_carnets_analyse, colNames = TRUE, rowNames = TRUE)
+
+
+addWorksheet(wb, "result_TOT_TRUST")
+writeData(wb, sheet = "result_TOT_TRUST",result_TOT_TRUST, colNames = TRUE, rowNames = TRUE)
+
+
+addWorksheet(wb, "result_TOT_AC")
+writeData(wb, sheet = "result_TOT_AC",result_TOT_AC, colNames = TRUE, rowNames = TRUE)
 
 
 

@@ -7,7 +7,12 @@ library("dplyr");library("tidyr");library("ggplot2");library("gridExtra");librar
 library(questionr)
 
   ## Importation des données ---------------------
-
+researcher<-"adenieul" #"vbellassen" edumont
+if (researcher == "adenieul") {
+  setwd <- paste0("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")
+} else {
+  setwd(paste0("C:/Users/",researcher,"/Owncloud/TI Dijon/donnees"))
+}
 
     ### Entrer la date de la campagne ---------------------
 campaign<- "24-03" #22-11 #23-02 #23-11 #24/03 
@@ -194,7 +199,7 @@ Frame <-Frame %>%
 
 Frame$Identifiant[ Frame$Identifiant=="8447-CCAS" ] <- "8747-CCAS"
 Frame$Identifiant[ Frame$Identifiant=="PE19-CCAS" ] <- "PE019-CCAS"
-Frame$Identifiant[ Frame$Identifiant=="1564-Epicerie2" ]<- "1654-Epicerie2"
+Frame$Identifiant[ Frame$Identifiant=="1564-Epimut" ]<- "1654-Epimut"
 Frame$Identifiant[ Frame$Identifiant=="P E013-CCAS" ] <- "PE013-CCAS"
 Frame$Identifiant[ Frame$Identifiant=="SP032-CCAS" ] <- "SP040-CCAS"
 Frame$Identifiant[ Frame$Identifiant=="SP-052-CCAS" ] <- "SP052-CCAS"
@@ -298,7 +303,7 @@ if (campaign == "23-02") {
 
 metadata$Identifiant[ metadata$Identifiant=="8447-CCAS" ] <- "8747-CCAS"
 metadata$Identifiant[ metadata$Identifiant=="PE19-CCAS" ] <- "PE019-CCAS"
-metadata$Identifiant[ metadata$Identifiant=="1564-Epicerie2" ]<- "1654-Epicerie2"
+metadata$Identifiant[ metadata$Identifiant=="1564-Epimut" ]<- "1654-Epimut"
 metadata$Identifiant[ metadata$Identifiant=="P E013-CCAS" ] <- "PE013-CCAS"
 metadata$Identifiant[ metadata$Identifiant=="SP032-CCAS" ] <- "SP040-CCAS"
 metadata$Identifiant[ metadata$Identifiant=="SP-052-CCAS" ] <- "SP052-CCAS"
@@ -465,19 +470,19 @@ metadata$Foyer_monoparental <- ifelse((metadata$Avez.vous.des.enfants.a.charge. 
 
 #Correction des budget alimentaires-------------------------
 if (campaign == "22-11") {
-  metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "6354-Epicerie1"),(250),(metadata$Budget.mensuel.alimentation.))
-  metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "770-Epicerie2"),(200),(metadata$Budget.mensuel.alimentation.))
+  metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "6354-Episourire"),(250),(metadata$Budget.mensuel.alimentation.))
+  metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "770-Epimut"),(200),(metadata$Budget.mensuel.alimentation.))
   
   }else{ 
   if (campaign == "23-02") {
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "10499-Epicerie1"),(200),(metadata$Budget.mensuel.alimentation.))
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1280-Epicerie2"),(100),(metadata$Budget.mensuel.alimentation.))
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1530-Epicerie2"),(150),(metadata$Budget.mensuel.alimentation.))
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "5455-Epicerie1"),(100),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "10499-Episourire"),(200),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1280-Epimut"),(100),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1530-Epimut"),(150),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "5455-Episourire"),(100),(metadata$Budget.mensuel.alimentation.))
     metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "5894-CCAS"),(100),(metadata$Budget.mensuel.alimentation.))
     metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "PE023-CCAS"),(150),(metadata$Budget.mensuel.alimentation.))
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "6222-Epicerie1"),(200),(metadata$Budget.mensuel.alimentation.))
-    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1730-Epicerie2"),(200),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "6222-Episourire"),(200),(metadata$Budget.mensuel.alimentation.))
+    metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "1730-Epimut"),(200),(metadata$Budget.mensuel.alimentation.))
       } else {
     if (campaign == "24-03") {
       metadata$Budget.mensuel.alimentation. <- ifelse((metadata$Identifiant == "PS009"),(200),(metadata$Budget.mensuel.alimentation.))
@@ -499,15 +504,11 @@ metadata$Si.noncombien.de.fois.la.semaine.derniere. <- as.numeric(metadata$Si.no
 metadata$Gapillage.produits.non.entames  <- ifelse(!is.na(as.numeric(metadata$Gapillage.produits.non.entames )), metadata$Gapillage.produits.non.entames , "NA")
 metadata$Gapillage.produits.non.entames <- as.numeric(metadata$Gapillage.produits.non.entames)
 metadata$freq_hebdo_gaspillage <- metadata$Si.noncombien.de.fois.la.semaine.derniere. + metadata$Gapillage.produits.non.entames
-tert <- quantile(metadata$freq_hebdo_gaspillage, probs = c(1/3, 2/3), na.rm = TRUE)
 
 
 
 metadata<- metadata[, !names(metadata) %in% c("De.moins.de.3.ans", "De.3.a.10.ans", "De.11.a.14.ans",
-                                              "De.15.a.17.ans", "De.15.a.17.ans", "De.18.ans.et.plus",
-                                              "La.semaine.dernierevous.arrive.t.il.de.jeter.des.restes.apres.un.repas.",
-                                              "Si.ouien.avez.vous.jete.tous.les.jours.", " Si.noncombien.de.fois.la.semaine.derniere.",
-                                              "Gaspillage.restes.", "Gapillage.produits.non.entames")]
+                                              "De.15.a.17.ans", "De.15.a.17.ans", "De.18.ans.et.plus")]
 
 
 

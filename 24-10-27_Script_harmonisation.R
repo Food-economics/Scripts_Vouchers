@@ -6,6 +6,13 @@ library(ggplot2);library(effsize);library(lfe);library(ggpubr);library(vtable);l
 library("gridExtra");library("RColorBrewer");library(reshape2);library(Metrics)
 library("poLCA");library("webshot")
 
+#Chargement de l'envrionnement de travail -----------------
+researcher<-"adenieul" #"vbellassen" edumont
+if (researcher == "adenieul") {
+  setwd <- paste0("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")
+} else {
+  setwd(paste0("C:/Users/",researcher,"/Owncloud/TI Dijon/donnees"))
+}
 
 #Nov 22
 Carnet_nov_22<- read.xlsx((paste("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichiers_prétraités/Carnets_Tableaux_nov_22.xlsx", sep="")))
@@ -32,7 +39,6 @@ Revenu_lime_survey <- read.xlsx((paste("Données analysées - Article N°1 chèq
 
 
 #Suppression des Opticourses
-##SUPPRESSION DES OPTICOURSES
 # Supprimer les identifiants qui ressortent avec un message d'alerte dans resultats_codachats
 
 identifiants <- c("LE012", "LE017", "LE021", "LE028", "LE037", "LE040", "LE043", "LE045", "LE049", "LE058", 
@@ -152,9 +158,10 @@ colonnes_uniques_23 <- setdiff(colonnes_nov_23, colonnes_nov_22)
 Carnet_nov_23$Quand.avez.vous.eu.recours.a.l.aide.alimentaire.pour.la.premiere.fois. <- NA
 
 #Carnet_nov_22$NA_prix_kg <- NULL
+setdiff(names(Carnet_nov_22), names(Carnet_nov_23))
+setdiff(names(Carnet_nov_23), names(Carnet_nov_22))
+Carnet_NOV <- bind_rows(Carnet_nov_22, Carnet_nov_23)
 
-# Maintenant, rbind devrait fonctionner
-Carnet_NOV <- rbind(Carnet_nov_22, Carnet_nov_23)
 
 
  ##Ajout du diplome au tableau de mars ------------------------------
@@ -176,7 +183,7 @@ colonnes_uniques_24 <- setdiff(colonnes_mars_23, colonnes_mars_24)
 # Colonnes présentes dans Carnet_mars_24 mais pas dans Carnet_mars_23
 colonnes_uniques_23 <- setdiff(colonnes_mars_24, colonnes_mars_23)
 
-Carnet_MARS <- rbind(Carnet_mars_23, Carnet_mars_24)
+Carnet_MARS <- bind_rows(Carnet_mars_23, Carnet_mars_24)
 cols_23 <- names(Carnet_mars_23)
 cols_24 <- names(Carnet_mars_24)
 
@@ -484,22 +491,22 @@ sgsdata$cheque_theo_bis <- 0
     mutate(
       UC_TI_arrondi = ceiling(UC_TI * 2) / 2,  # Arrondir au 0,5 supérieur
       cheque_theo_bis = case_when(
-        # Cas "Epicerie2" ou "Epicerie1"
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 10 ~ 28,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 15 ~ 40,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 20 ~ 58,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 25 ~ 68,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 30 ~ 82,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 35 ~ 92,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 40 ~ 116,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 45 ~ 126,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 50 ~ 140,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 55 ~ 150,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 60 ~ 164,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 65 ~ 184,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 70 ~ 198,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 75 ~ 208,
-        grepl("Epicerie2|Epicerie1", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 80 ~ 222,
+        # Cas "Epimut" ou "Episourire"
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 10 ~ 28,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 15 ~ 40,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 20 ~ 58,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 25 ~ 68,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 30 ~ 82,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 35 ~ 92,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 40 ~ 116,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 45 ~ 126,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 50 ~ 140,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 55 ~ 150,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 60 ~ 164,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 65 ~ 184,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 70 ~ 198,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 75 ~ 208,
+        grepl("Epimut|Episourire", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 80 ~ 222,
         
         # Cas général pour les autres voie_de_recrutements
         grepl("CCAS", voie_de_recrutement) & round(UC_TI_arrondi * 10) == 10 ~ 40,
@@ -552,7 +559,7 @@ sgsdata$PLATS_PREP_POIDS <- sgsdata$PLATS_PREP_CARNES_POIDS + sgsdata$PLATS_PREP
 sgsdata$VIANDE_ROUGE_PORC_POIDS <- sgsdata$VIANDE_ROUGE_POIDS+ sgsdata$PORC_POIDS
 sgsdata$VIANDES_POIDS <- sgsdata$VIANDE_ROUGE_POIDS + sgsdata$POULET_POIDS + sgsdata$PLATS_PREP_CARNES_POIDS + sgsdata$JAMBON_BLANC_POIDS + sgsdata$PORC_POIDS + sgsdata$CHARCUTERIE_HORS_JB_POIDS
 sgsdata$MG_POIDS <- sgsdata$MGA_POIDS + sgsdata$MGV_POIDS
-sgsdata$PDTS_DISCRETIONNAIRES_POIDS <- sgsdata$SNACKS_AUTRES_POIDS +  sgsdata$CEREALES_PD_POIDS + sgsdata$DESSERTS_LACTES_POIDS + sgsdata$PDTS_SUCRES_POIDS + sgsdata$SAUCES_POIDS
+sgsdata$PDTS_DISCRETIONNAIRES_POIDS <-   sgsdata$CEREALES_PD_POIDS + sgsdata$DESSERTS_LACTES_POIDS + sgsdata$PDTS_SUCRES_POIDS + sgsdata$SAUCES_POIDS  + sgsdata$SNACKS_AUTRES_POIDS 
 sgsdata$SSB_POIDS <-  sgsdata$SODAS_SUCRES_POIDS + sgsdata$SODAS_LIGHT_POIDS +sgsdata$FRUITS_JUS_POIDS 
 
 
@@ -657,6 +664,19 @@ sgsdata$Part_Depense_BIO <- ifelse(is.na(sgsdata$Part_Depense_BIO), 0, as.numeri
 sgsdata$Part_Depense_Epiceries <- ifelse(is.na(sgsdata$Part_Depense_Epiceries), 0, as.numeric(sgsdata$Part_Depense_Epiceries))
 sgsdata$Part_Depense_Supermarchés <- ifelse(is.na(sgsdata$Part_Depense_Supermarchés), 0, as.numeric(sgsdata$Part_Depense_Supermarchés))
 
+#Supprimer colonnes inutiles
+sgsdata <- sgsdata[, !(names(sgsdata) %in%
+                         names(sgsdata)[match("X96", names(sgsdata)) :
+                                          match("HENI", names(sgsdata))])]
+
+sgsdata$UC_moy <- NULL
+sgsdata$M0cor <- NULL
+sgsdata$HENI_alim <- NULL
+sgsdata$UC_TI_arrondi <- NULL
+
+library(dplyr)
+
+
 ##HENI---------------------------------------------------------------------------
 CALNUT  <- read.xlsx((paste("Données analysées - Article N°1 chèques/Tableaux_annexes/Alim_CALNUT_CODAPPRO_CARNET.xlsx", sep="")))
 
@@ -720,13 +740,13 @@ sgsdata$HENI_TOT <- sgsdata$CAFE_THE_HENI + sgsdata$CEREALES_PD_HENI + sgsdata$C
 
 
 
-#Part de non recours   ---------------------------------------------------------
+#Part de non recours deuxième campagne   ---------------------------------------------------------
 #Definition fichier up 24
 up <- read.xlsx(paste("usage_cheques/24-12-20_Etat des titres simplifiés_millesime2024.xlsx"),cols = 19:29,startRow = 30,sheet = "Etat des titres simplifiés",detectDates = T)
 colnames(up)<-gsub('xml:space="preserve">',"",colnames(up));up$Statut<-gsub('xml:space="preserve">',"",up$Statut);up$RS.Affilié<-gsub('xml:space="preserve">',"",up$RS.Affilié)
 up<-up%>%mutate(Titre = if_else(Montant.Emission == 5, paste0("fl_",Titre),paste0("ls_",Titre)))
 
-#Bordereau up 24
+#Reconstruction du fichier Bordereau pour l'ensemble des envois pdt la période traitée
 bordereau_9_janvier <- read.xlsx(paste("usage_cheques/24-03-26-bordereau_envoi_cheques.xlsx"),sheet = "bordereau_9_janvier",cols = 1:18,detectDates = T)
 bordereau_9_janvier$date<-as.Date("2024-01-09")
 bordereau_23_janvier <- read.xlsx(paste("usage_cheques/24-03-26-bordereau_envoi_cheques.xlsx"),sheet = "bordereau_23_janvier",cols = 1:18,detectDates = T)
@@ -753,7 +773,6 @@ for (i in 1:length(liste_id)) {
   temp<-bordereau[which(bordereau$id==liste_id[i]),c("no_premier_cheque_FruitsLegs","no_dernier_cheque_FruitsLegs","date")]
   for (j in 1:nrow(temp)) {
     if (temp[j,1]>0 & j == 1) {
-      # liste_no_cheques$id_fl[[i]]<-unlist(Map(seq, temp[j,1], temp[j,2]))
       liste_no_cheques$id_fl[[i]]<-paste0("fl_",unlist(Map(seq, temp[j,1], temp[j,2])))
       liste_no_cheques$date_fl[[i]]<-rep(temp$date[j],length(unlist(Map(seq, temp[j,1], temp[j,2]))),each=T)
     }
@@ -779,7 +798,6 @@ for (i in 1:nrow(up)) {
   for (j in 1:length(liste_id)) {
     temp<-which(liste_no_cheques$id_fl[[j]]==up$Titre[i])
     if (length(temp)>0) {
-      # if (up$Numero.Titre.Source[i]%in%liste_no_cheques$id_fl[[j]]) {
       up$id_fl[i]<-liste_id[j]
       up$date_envoi[i]<-liste_no_cheques$date_fl[[j]][temp]
     }
@@ -795,25 +813,36 @@ up<-up %>% mutate(date_envoi = as.Date(date_envoi,origin=as.Date("1970-01-01")))
 
 #Extraire de sgsdata les dates de saisie des questionnaires
 extracted_data <- sgsdata[, c("Campagne", "Periode", "Identifiant", "Date.de.saisie")]
-
-# Supprimer les doublons de tout le dataframe
+#On garde que les données de periode traitée + Suppression colonnes inutiles
 extracted_data <- extracted_data %>% filter(Periode != 0)
 extracted_data <- extracted_data[, -which(names(extracted_data) == "Campagne")]
 extracted_data <- extracted_data[, -which(names(extracted_data) == "Periode")]
 extracted_data_unique <- distinct(extracted_data)
+
+#On associe chaque numéro de chèque à un identifiant
 up <- up %>%
   mutate(Identifiant = coalesce(id_fl, id_ls))
 up <- up %>%
   left_join(extracted_data_unique, by = c("Identifiant" = "Identifiant"))
 
+#On défini un montant remboursé
 temp <- up  # %>%
 temp$montant_remboursé<- ifelse((temp$Statut=="Remboursé"),(temp$Montant.Emission),(0))
-temp$date_fin_remboursement <- as.Date("2024-05-21")
+#Fin de remboursement pour toute la campagne
+temp$date_fin_remboursement <- as.Date("2024-05-22") #50 jours après le dernier envoi (2 avril)
 temp$montant.remboursé_vf <- ifelse(
   temp$Date.Statut > temp$date_fin_remboursement,
   0,
   temp$montant_remboursé
 )
+temp$montant_utilisé_tard <- ifelse((temp$montant.remboursé_vf ==0), (temp$Montant.Emission),(0))
+temp$montant_non_utilisé <- ifelse((is.na(temp$montant.remboursé_vf)), (temp$Montant.Emission),(0))
+
+
+temp_non_rembourse <- temp %>% 
+  filter(montant.remboursé_vf ==0)
+sum(temp_non_rembourse$Montant.Emission)
+sum(temp_non_rembourse$montant.remboursé_vf, na.rm=TRUE)
 
 # Calculer le pourcentage pour chaque Identifiant
 result <- temp %>%
@@ -821,7 +850,11 @@ result <- temp %>%
   summarise(
     Montant.Emission = sum(Montant.Emission, na.rm = TRUE),
     montant.remboursé_vf = sum(montant.remboursé_vf, na.rm = TRUE),
-    pourcentage_remboursé_avant_la_fin = montant.remboursé_vf / Montant.Emission
+    montant_utilisé_tard = sum(montant_utilisé_tard, na.rm = TRUE),
+    montant_non_utilisé = sum(montant_non_utilisé, na.rm = TRUE),
+    pourcentage_remboursé_avant_la_fin = montant.remboursé_vf / Montant.Emission,
+    pourcentage_remboursé_après_la_fin = montant_utilisé_tard/ Montant.Emission,
+    pourcentage_remboursé_non_remboursé = montant_non_utilisé / Montant.Emission
   ) %>%
   distinct()
 
@@ -989,7 +1022,7 @@ Total <- left_join(Numeros, Cheques, by = "Titre")
 Total <- Total %>% filter(!if_all(-Titre, ~ is.na(.) | . == ""))
 Total <- Total %>% filter(!if_all(-Montant.Emission, ~ is.na(.) | . == ""))
 Total <- Total %>% filter(Statut=="Remboursé")
-Total$date_fin_remboursement <- as.Date("2023-05-02") #On regarde ce qui est remboursé 50 jours jusqu'au dernier envoi
+Total$date_fin_remboursement <- as.Date("2023-05-06") #On regarde ce qui est remboursé 50 jours jusqu'au dernier envoi (ici 17 mars)
 Total$montant.remboursé_vf <- ifelse(Total$Date.Statut > Total$date_fin_remboursement, 0,Total$Montant.Emission)
 # Étape 1 : initialiser la colonne
 # Étape 2 : calcul du ratio
@@ -1003,6 +1036,7 @@ temp <- up
 temp$duree_remboursement <- as.Date(temp$Date.Statut) - as.Date(temp$date_envoi)
 temp_rembourse <- temp %>% 
   filter(Statut == "Remboursé")
+
 temp_rembourse$duree_remboursement = as.period(temp_rembourse$duree_remboursement)
 temp_rembourse <- temp_rembourse[, c("Titre", "duree_remboursement")]
 
@@ -1021,6 +1055,32 @@ summary(temp_rembourse2$duree_remboursement)
 summary(Temp_vf$duree_remboursement)
 
 
+sgsdata <- sgsdata %>%
+  relocate(
+    Situation_emploi,
+    Source_revenu,
+    Education,
+    Aide_alim,
+    branche,
+    Prop_montant_theorique_saisie,
+    Montant.Emission,
+    montant.remboursé_vf,
+    montant_utilisé_tard,
+    montant_non_utilisé,
+    pourcentage_remboursé_avant_la_fin,
+    pourcentage_remboursé_après_la_fin,
+    pourcentage_remboursé_non_remboursé,
+    somme_montant_cheques,
+    Les.avez.vous.utilises.,
+    Qu.avez.vous.fait.des.cheques.que.vous.n.avez.pas.utilises.,
+    .after = Compliant_FFQ
+  )
+
+sgsdata <- sgsdata %>%
+  relocate(
+    PVS,
+    .before = FV_POIDS
+  )
 
 #Téléchargement des tableaux finaux -----------------------------------------
 # Créer un nouvel objet workbook
@@ -1031,8 +1091,16 @@ writeData(wb, sheet = "sgsdata", sgsdata  )
 
 saveWorkbook(wb,(paste0("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichier_traitement/sgsdata.xlsx")))
 
+sgsdata <-sgsdata %>%
+  mutate(
+    across(
+      ends_with("_prix_kg"),
+      ~ replace_na(.x, 0)
+    )
+  )
 
-
+sgsdata <-sgsdata %>%
+  mutate(across(ends_with("_POIDS"), ~ . * 1000))
 ###
 carnet_data <- sgsdata %>%
   filter(Mesure == "Carnet") %>%

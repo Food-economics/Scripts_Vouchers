@@ -7,11 +7,13 @@ library(ggpubr);library(vtable);library;library("openxlsx");
 library("dplyr"); library("tidyr");library("ggplot2");library("gridExtra");library(lubridate);
 library("RColorBrewer");library(reshape2);library(Metrics);library(questionr);library(zoo)
 ## Importation des données ---------------------
-
+researcher<-"adenieul" #"vbellassen" edumont
+if (researcher == "adenieul") { setwd <- paste0("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")} else {
+  setwd(paste0("C:/Users/",researcher,"/Owncloud/TI Dijon/donnees"))}
 
 ### Entrer la date de la campagne ---------------------
-campaign<-"23-02" #"22-11" #23-02 #"23-11" #"24-03" 
-Nj <- 29 #"Nombre de jour de saisie : 28 si 23-11/24-03 #29 sinon 
+campaign<-"24-03" #"22-11" #23-02 #"23-11" #"24-03" 
+Nj <- 28 #"Nombre de jour de saisie : 28 si 23-11/24-03 #29 sinon 
 
 ### Importation des données de Nov_2022 ------------------
 Carnet_nov_22 <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_bruts/22-11_Carnets.xlsx")
@@ -77,7 +79,7 @@ if (campaign == "22-11") {
 names(resultats_codachats)[1] = "Identifiant"
 resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="8447-CCAS") ] = "8747-CCAS"
 resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="PE19-CCAS") ] = "PE019-CCAS"
-resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="1564-Epicerie2") ] = "1654-Epicerie2"
+resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="1564-Epimut") ] = "1654-Epimut"
 resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="P E013-CCAS") ] = "PE013-CCAS"
 resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="SP032-CCAS") ] = "SP040-CCAS"
 resultats_codachats$Identifiant[ (resultats_codachats$Identifiant=="SP-052-CCAS") ] = "SP052-CCAS"
@@ -488,7 +490,7 @@ if (campaign == "23-11" | campaign == "24-03") {
 }
 
 # Liste des identifiants à filtrer
-#identifiants_a_filtrer <- c("1730-Epicerie2", "A1-Epicerie2", "6222-Epicerie1", "6273-Epicerie1", "SP041-CCAS")
+#identifiants_a_filtrer <- c("1730-Epimut", "A1-Epimut", "6222-Episourire", "6273-Episourire", "SP041-CCAS")
 #Frame_filtre <- resultats_codachats[resultats_codachats$Identifiant %in% identifiants_a_filtrer, ]
 #print(unique(Frame_filtre$Identifiant))
 #print(unique(resultats_codachats$Identifiant))
@@ -594,14 +596,6 @@ resultats_codachats  <- temp
 #24/03 : MEAN 40 / MEDIAN 36 --> LE : MEAN : 39 / MEDIAN 36
 
 # NETTOYAGE DU FICHIER COD_ACHATS :  POIDS / PRIX / UNITES ----------------------------
-#-	Si le poids égal 0 grammes, appliquer une conversion en unités 
-#resultats_codachats$Unite <- ifelse((resultats_codachats$Nb == 0 & resultats_codachats$Unite == "grammes"), ("unités"), (resultats_codachats$Unite))
-##-	Si le poids est égal à 0 kg, conversion en unités 
-#resultats_codachats$Unite <- ifelse((resultats_codachats$Nb == 0 & resultats_codachats$Unite == "kilos"), ("unités"), (resultats_codachats$Unite))
-##-	SI le poids est égal à 0 centilitres, conversion en unités
-#resultats_codachats$Unite <- ifelse((resultats_codachats$Nb == 0 & resultats_codachats$Unite == "centilitres"), ("unités"), (resultats_codachats$Unite))
-#-	Si le poids à égal 0 unités, indiquer qu’il s’agit d’1 unité 
-#resultats_codachats$Nb <- ifelse((resultats_codachats$Nb ==0 & resultats_codachats$Unite=="unités"), (1), (resultats_codachats$Nb))
 
 #-	Si la quantité est supérieure à 20 unités et qu’il ne s’agit pas d’œuf ou de Café_thé, attribuer des grammes. 
 resultats_codachats <- resultats_codachats %>%
@@ -615,6 +609,7 @@ resultats_codachats <- resultats_codachats %>%
         LibelleCIQUAL != "Compote de pomme" &
         LibelleCIQUAL != "Compote de fruits" &
         LibelleCIQUAL != "Compote de fruits, allégée en sucres" & 
+        LibelleCIQUAL != "Sushi ou maki aux produits de la mer" &
         groupe_TI_TdC1!="OEUFS" & 
         groupe_TI_TdC1!="CAFE_THE", 
       "grammes",
@@ -663,7 +658,7 @@ resultats_codachats$Prix_kg <- resultats_codachats$Prix / resultats_codachats$Nb
 aliments_specifiques <- c(
   "Bonbon/ bouchée chocolat fourrage gaufrettes/ biscuit", "Bonbons, tout type", "Champignon, tout type, cru",
   "Champignons à la grecque, appertisés", "Barre chocolatée biscuitée", "Fromage à pâte molle et croûte fleurie double crème environ 30% MG",
-  "Miel", "Sucre blanc", "Crème fraîche, 15 à 20% MG, UHT", "Rillettes de poulet", "Champignon noir, séché",
+  "Miel", "Sucre blanc", "Crème fraîche, 15 à 20% MG, UHT", "Rillettes de poulet", 
   "Jambon sec, découenné, dégraissé", "Cacahuète ou Arachide", "Croissant, sans précision", "Viande rouge, cuite (aliment moyen)",
   "Confiserie au chocolat dragéifiée", "Chocolat blanc aux fruits secs (noisettes, amandes, raisins, praliné), tablette",
   "Yaourt, lait fermenté ou spécialité laitière, aux fruits, sucré", "Fruit cru (aliment moyen)", "Rillettes de thon", "Crevette, crue",
@@ -742,10 +737,8 @@ resultats_codachats <- resultats_codachats %>%
          LibelleCIQUAL == "Compote de pomme" |
          LibelleCIQUAL == "Compote de fruits" |
          LibelleCIQUAL == "Compote de fruits, allégée en sucres" |
-         LibelleCIQUAL == "Compote (aliment moyen)" |
-         
-         
-         LibelleCIQUAL =="Sushi ou Maki aux produits de la mer"
+         LibelleCIQUAL == "Compote (aliment moyen)" 
+       
       )
       & Unite == "unités",
       Nb * 0.1,
@@ -757,8 +750,7 @@ resultats_codachats <- resultats_codachats %>%
          LibelleCIQUAL == "Compote de pomme" |
          LibelleCIQUAL == "Compote de fruits" |
          LibelleCIQUAL == "Compote de fruits, allégée en sucres" |
-         LibelleCIQUAL == "Compote (aliment moyen)" |
-         LibelleCIQUAL == "Sushi ou Maki aux produits de la mer"
+         LibelleCIQUAL == "Compote (aliment moyen)" 
       ) & Unite == "unités" & !is.na(Nb),
       "kilos",
       Unite
@@ -869,6 +861,11 @@ aliments_specifiques <- c("Abat, cru (aliment moyen)", "Abat, cuit (aliment moye
                           "Thon, cru ", "Accra de poisson")
 resultats_codachats$Prix <- ifelse(resultats_codachats$LibelleCIQUAL %in% aliments_specifiques & resultats_codachats$Prix == 100, 10, resultats_codachats$Prix)
 
+#Correction du type d'aliment après verif sur ticket de caisse
+resultats_codachats$LibelleCIQUAL <- ifelse((resultats_codachats$LibelleCIQUAL == "Champignon, tout type, cru" & resultats_codachats$Identifiant =="6348-Episourire"),("Champignon noir, séché"), (resultats_codachats$LibelleCIQUAL))
+#Coeff hydratation X14
+#https://www.meilleurduchef.com/fr/achat/epicerie/sale/champignon-truffe/ddb-champignon-noir-deshydrate.html
+resultats_codachats$Nb<- ifelse((resultats_codachats$LibelleCIQUAL == "Champignon noir, séché" & resultats_codachats$Unite =="grammes" ),(resultats_codachats$Nb*14), (resultats_codachats$Nb))
 
 
 
@@ -925,9 +922,6 @@ resultats_codachats <- resultats_codachats %>%
   )) %>%
   mutate(Poids = ifelse(Poids == 0, NA_real_, Poids)) %>%
   mutate(Poids = as.numeric(Poids))
-resultats_codachats %>%
-  filter(LibelleCIQUAL == "Compote de fruits, allégée en sucres") %>%
-  select(Nb, Unite)
 
 
 resultats_codachats$Poids <-ifelse((resultats_codachats$Unite == "unités" & is.na(resultats_codachats$Poids) ),(NA),(resultats_codachats$Poids))
@@ -948,7 +942,6 @@ describe(is.na(resultats_codachats$Poids))
 ## Calcul du Prix / Kg pour tous les aliments -------------
 resultats_codachats$Prix_kg <- resultats_codachats$Prix_all / resultats_codachats$Poids
 print(unique(resultats_codachats$Prix_kg))
-
 
 
 ## Calcul du prix moyen par Kg et du poids moyen pour l'Imputation CODE_CIQUAL X Lieu1 -----------
@@ -1047,11 +1040,11 @@ resultats_codachats <- resultats_codachats %>%
   ungroup()
 
 
-bis <- resultats_codachats %>%
-  filter(Identifiant == "39-Epicerie2") %>%
-  select(Date, LibelleCIQUAL, groupe_TI_TdC1 , Poids, Prix_all, prix_moyen_ciqual1, prix_moyen_ciqual2,prix_moyen_groupe_TI_TdC1
-         ) %>%
-  print(n = Inf)
+#bis <- resultats_codachats %>%
+#  filter(Identifiant == "39-Epimut") %>%
+#  select(Date, LibelleCIQUAL, groupe_TI_TdC1 , Poids, Prix_all, prix_moyen_ciqual1, prix_moyen_ciqual2,prix_moyen_groupe_TI_TdC1
+#         ) %>%
+#  print(n = Inf)
 
 ## Imputation finale ---------------
 # Initialisation des colonnes finals à partir des colonnes d'origine
@@ -1180,7 +1173,7 @@ identifiants_alerte <- Comparaison %>%
   filter(somme_prix_vf < quart_budget )%>%
   pull(Identifiant)
 
-##SUPPRESSION DES OPTICOURSES
+#SUPPRESSION DES OPTICOURSES
 # Supprimer les identifiants qui ressortent avec un message d'alerte dans resultats_codachats
 resultats_codachats<- resultats_codachats%>%
   filter(!Identifiant %in% identifiants_alerte )
@@ -1572,7 +1565,7 @@ prix_unitaire <- data.frame(
   groupe_TI_TdC = resultats_codachats$groupe_TI_TdC1,
   prix_kg = resultats_codachats$Prix_Kg_post_imput,
   prix_vf = resultats_codachats$Prix_vf,
-  poids_vf = resultats_codachats$Poids_vf
+  poids_vf = resultats_codachats$Poids_consomme_vf
 )
     
 prix_unitaire <- prix_unitaire %>%
@@ -1606,65 +1599,65 @@ prix_unitaire_wide <- prix_unitaire_summary %>%
 FV_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c("FRUITS", "LEGUMES",  "NOIX", "FRUITS_SECS"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 
 FRUITS_prix_kg_tous <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c("FRUITS",  "NOIX", "FRUITS_SECS"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 FEC_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "FEC_NON_RAF", "FEC_RAF"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 PDTS_LAITIERS_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "LAIT", "LAITAGES", "FROMAGES"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 POULET_OEUFS_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "POULET", "OEUFS"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 AUTRE_PDTS_ANIMAUX_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "CHARCUTERIE_HORS_JB", "JAMBON_BLANC"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 PLATS_PREP_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "PLATS_PREP_CARNES", "PLATS_PREP_VEGETARIENS", "QUICHES_PIZZAS_TARTES_SALEES_POIDS"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 VIANDE_ROUGE_PORC_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "VIANDE_ROUGE", "PORC"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 VIANDES_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "VIANDE_ROUGE", "POULET", "PLATS_PREP_CARNES", 
                                 "JAMBON_BLANC", "CHARCUTERIE_HORS_JB", "PORC"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 
 MG_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "MGA", "MGV"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 PDTS_DISCRETIONNAIRES_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "SNACKS_AUTRES", "CEREALES_PD", "DESSERTS_LACTES","PDTS_SUCRES", "SAUCES"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 SSB_prix_kg <- resultats_codachats %>%
   filter(groupe_TI_TdC1 %in% c( "SODAS_SUCRES", "SODAS_LIGHT_POIDS", "FRUITS_JUS"), !is.na(Prix_Kg_post_imput)) %>%
   group_by(Identifiant) %>%
-  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_vf, na.rm = TRUE))
+  summarise(prix_kg_moy = sum(Prix_vf, na.rm = TRUE)/ sum(Poids_consomme_vf, na.rm = TRUE))
 
 df_list <- list(
   FV                     = FV_prix_kg,
@@ -1744,7 +1737,7 @@ if (campaign == "23-02" | campaign == "24-03") {
     group_by(Identifiant, Date_vf, Lieu_vf) %>%
     summarise(
       montant_eligible = sum(ifelse(groupe_TI_TdC1 %in% c("FRUITS", "LEGUMES", "FRUITS_SECS", "LEG_SECS", "NOIX"), Prix_vf, 0)),
-      montant_cheques = sum(MontantChequeAlimentaire),  # Prendre en compte uniquement la première ligne du ticket
+      montant_cheques = first(MontantChequeAlimentaire),  # Prendre en compte uniquement la première ligne du ticket
       .groups = 'drop_last'
     )
 
@@ -1752,12 +1745,7 @@ tickets_c$montant_eligible <- ifelse(is.na(tickets_c$montant_eligible),(0),(tick
 tickets_c <- tickets_c %>% filter(montant_cheques != 0)
 montant_eligible_bis <- tickets_c
 
-#Solution A
-#tickets_c$score_a <- (tickets_c$montant_cheques-tickets_c$montant_eligible)/(tickets_c$montant_cheques)
-#tickets_c$score_b <- ifelse((tickets_c$score_a>1),(1),(tickets_c$score_a))
-#tickets_c$score_c <- tickets_c$montant_cheques*tickets_c$score_b
-
-#Solution B 
+ 
 tickets_c$score_a <- (tickets_c$montant_eligible/tickets_c$montant_cheques)
 tickets_c$score_b <- ifelse((tickets_c$score_a>1),(1),(tickets_c$score_a))
 tickets_c$score_c <- tickets_c$montant_cheques*tickets_c$score_b
@@ -1801,22 +1789,22 @@ if (campaign == "22-11" | campaign == "23-11") {
       mutate(
         UC_TI_arrondi = ceiling(UC_TI * 2) / 2,  # Arrondir au 0,5 supérieur
         cheque_theo = case_when(
-          # Cas "Epicerie2" ou "Epicerie1"
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 10 ~ 28,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 15 ~ 40,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 20 ~ 58,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 25 ~ 68,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 30 ~ 82,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 35 ~ 92,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 40 ~ 116,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 45 ~ 126,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 50 ~ 140,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 55 ~ 150,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 60 ~ 164,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 65 ~ 184,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 70 ~ 198,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 75 ~ 208,
-          grepl("Epicerie2|Epicerie1", Identifiant) & round(UC_TI_arrondi * 10) == 80 ~ 222,
+          # Cas "Epimut" ou "Episourire"
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 10 ~ 28,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 15 ~ 40,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 20 ~ 58,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 25 ~ 68,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 30 ~ 82,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 35 ~ 92,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 40 ~ 116,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 45 ~ 126,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 50 ~ 140,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 55 ~ 150,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 60 ~ 164,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 65 ~ 184,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 70 ~ 198,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 75 ~ 208,
+          grepl("Epimut|Episourire", Identifiant) & round(UC_TI_arrondi * 10) == 80 ~ 222,
           
           # Cas général pour les autres identifiants
           round(UC_TI_arrondi * 10) == 10 ~ 40,
@@ -1979,7 +1967,7 @@ CARNET_ELIGIBLE <- resultats_codachats %>%
   ) %>%
   group_by(Identifiant) %>%
   summarise(
-    total_poids  = sum(Poids_vf, na.rm = TRUE),  # Q
+    total_poids  = sum(Poids_consomme_vf, na.rm = TRUE),  # Q
     total_prix   = sum(Prix_vf,           na.rm = TRUE),  # M
     UC_moy       = mean(UC_TI),                           
     
@@ -2007,7 +1995,7 @@ Poids_achat <- resultats_codachats %>%
   ) %>%
   group_by(Identifiant, Lieu2) %>%
   summarise(
-    total_poids  = sum(Poids_vf, na.rm = TRUE),  # Q
+    total_poids  = sum(Poids_consomme_vf, na.rm = TRUE),  # Q
     total_prix   = sum(Prix_vf,           na.rm = TRUE),
     UC_moy       = mean(UC_TI))
 
@@ -2058,6 +2046,80 @@ mean(proportion_epicerie_sociale$prop_poids_epic)
 mean(proportion_epicerie_sociale$prix_unit)
 mean(proportion_epicerie_sociale$prix_epic)
 
+##Type de produits éligibles  --------------
+#Cru/Surgelé/Appertisé
+filtre <- resultats_codachats %>% 
+  filter(groupe_TI_TdC1 %in% c("FRUITS", "LEGUMES", "LEG_SECS", "FRUITS_SECS", "NOIX"))
+
+filtre <- filtre %>% 
+  mutate(
+    gamme = case_when(
+      str_detect(LibelleCIQUAL, regex("Surgelé|Surgelée", ignore_case = TRUE)) ~ "Surgelé_POIDS",
+      str_detect(LibelleCIQUAL, regex("sauce|sauté|crème|poêlé|appertisé|Olive|cuisinée|Ratatouille|égoutté|conserve|bocal|bouilli|Macédoine|cuit", ignore_case = TRUE)) ~ "Conserve_POIDS",
+      str_detect(LibelleCIQUAL, regex("Cru|fraîche|Fraîche|Mesclun|Mâche", ignore_case = TRUE)) ~ "Frais_POIDS",
+      str_detect(LibelleCIQUAL, regex("Soupe", ignore_case = TRUE)) ~ "Soupe_POIDS",
+      str_detect(LibelleCIQUAL, regex("Purée|Compote|Petit pot|Hoummous|Tapenade", ignore_case = TRUE)) ~ "Purée_POIDS",
+      str_detect(LibelleCIQUAL, regex("Nuggets|Seitan|Escalope|Galette|Haché|Pavé|Tofu|Falafel|Boulette", ignore_case = TRUE)) ~ "Préparation_POIDS",
+      str_detect(LibelleCIQUAL, regex("Noisette|Noix|Sèche|Sec|graine|séchée|grillée|Cacahuète|Amande|graîne", ignore_case = TRUE)) ~ "Sec_POIDS",
+      is.na(LibelleCIQUAL) ~ "Frais_POIDS",   # <-- correction propre ici
+      TRUE ~ NA_character_
+    ),
+    
+    # Ajout du préfixe
+    gamme = ifelse(!is.na(gamme), paste0(groupe_TI_TdC1, "_", gamme), NA)
+  )
+
+
+# Tableau long : un total par Identifiant x gamme
+table_gamme_long <- filtre %>% 
+  group_by(Identifiant, gamme) %>% 
+  summarise(
+    Poids_consomme_vf = sum(Poids_consomme_vf, na.rm = TRUE),
+    UC_TI = dplyr::first(UC_TI),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    Poids_consomme_vf = Poids_consomme_vf / (UC_TI * Nj)
+  ) 
+
+
+
+# Tableau large : une colonne par type de gamme
+table_gamme_wide <- table_gamme_long %>% 
+  pivot_wider(
+    names_from = gamme,
+    values_from = Poids_consomme_vf,
+    values_fill = 0
+  )
+
+table_gamme_wide <- table_gamme_wide[, !names(table_gamme_wide) %in% "UC_TI"]
+
+
+# Répartition par Identifiant x gamme x Lieu1
+table_lieu_gamme_long <- resultats_codachats  %>% 
+  filter(groupe_TI_TdC1 %in% c("FRUITS", "LEGUMES", "LEG_SECS", "FRUITS_SECS", "NOIX")) %>% 
+  group_by(Identifiant, groupe_TI_TdC1, Lieu2) %>% 
+  summarise(
+    Poids_consomme_vf = sum(Poids_consomme_vf, na.rm = TRUE),
+    UC_TI = dplyr::first(UC_TI),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    Poids_par_UC_Nj = Poids_consomme_vf / (UC_TI * Nj)
+  )
+
+table_lieu_gamme_long <- table_lieu_gamme_long %>%
+  mutate(gamme_lieu = paste0(groupe_TI_TdC1, "_", Lieu2))
+table_lieu_gamme_long <- table_lieu_gamme_long[, !(names(table_lieu_gamme_long) %in% c("Poids_consomme_vf", "UC_TI","gamme","Lieu2"))]
+table_lieu_gamme_long$groupe_TI_TdC1 <- NULL
+
+# Passage en large : une colonne par type de gamme_lieu
+table_gamme <- table_lieu_gamme_long %>%
+  pivot_wider(
+    names_from  = gamme_lieu,
+    values_from = Poids_par_UC_Nj,
+    values_fill = 0
+  )
 
 #Constitution des tableaux finaux ------------------------------------------------
 Carnet_id <- metadata 
@@ -2082,19 +2144,14 @@ Carnet_id$Mesure <- "Carnet"
 if (campaign == "22-11" |campaign == "23-11") { Carnet_id$Periode
 new_df <- tickets[, c("Identifiant" ,"cheque_theo","Différentiel_aide")]
 Carnet_id <- left_join(Carnet_id, new_df, by='Identifiant')}
-#Carnet_POIDS <- Carnet_POIDS[, !grepl("^Combien.de.personnes.vivent.dans.votre.foyer", names(Carnet_POIDS))]
 Carnet_POIDS <- Carnet_POIDS[, !grepl("UC_TI", names(Carnet_POIDS))]
 Carnet_id <- inner_join(Carnet_id, Carnet_POIDS, by='Identifiant')
+Carnet_id <- inner_join(Carnet_id, table_gamme_wide, by='Identifiant')
+Carnet_id <- inner_join(Carnet_id, table_gamme, by='Identifiant')
 Carnet_id <- inner_join(Carnet_id, CARNET_ELIGIBLE, by='Identifiant')
 new_df <- Carnet_KCAL[, c("Identifiant", "SOMME_CARNET_KCAL", "KCAL_SANS_BOISSON")]
 Carnet_id <- inner_join(Carnet_id, new_df, by='Identifiant')
-new_df <- somme_par_identifiant[, c("Identifiant", "HENI_alim", "MAR", "MER", "t_ratio_prot", "t_ratio_fibre", "t_ratio_lino", "t_ratio_alphalino", 
-                                    "t_ratio_dha", "t_ratio_potassium", "t_ratio_calcium", "t_ratio_selenium", 
-                                    "t_ratio_iode", "t_ratio_vit_d", "t_ratio_vit_c", "t_ratio_vit_b2", 
-                                    "t_ratio_vit_b12", "t_ratio_vit_b9", "t_ratio_magnesium", "t_ratio_fer", 
-                                    "t_ratio_cuivre", "t_ratio_zinc", "t_ratio_vit_a", "t_ratio_vit_e", 
-                                    "t_ratio_vit_b1", "t_ratio_vit_b3", "t_ratio_vit_b6", "t_ratio_ags", 
-                                    "t_ratio_sodium", "t_ratio_sucre_aj")]
+new_df <- somme_par_identifiant[, c("Identifiant", "HENI_alim", "MAR", "MER")]
 Carnet_id <- inner_join(Carnet_id, new_df, by='Identifiant')
 Carnet_id <- inner_join(Carnet_id, somme_par_identifiant_env, by='Identifiant')
 #Carnet_PRIX_Unitaire <- Carnet_PRIX_Unitaire[, !grepl("^Combien.de.personnes.vivent.dans.votre.foyer", names(Carnet_PRIX_Unitaire))]
