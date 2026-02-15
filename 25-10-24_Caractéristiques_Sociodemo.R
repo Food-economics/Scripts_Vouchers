@@ -291,6 +291,7 @@ Carnets_att <- left_join(Carnets_att, Liste, by="Identifiant")
 library(dplyr)
 library(stringr)
 
+
 Carnets_att <- Carnets_att %>%
   rename_with(~ str_replace(.x, "_CARNET$", "_POIDS"))
 
@@ -305,6 +306,12 @@ Carnets_att$VIANDES_POIDS <- Carnets_att$VIANDE_ROUGE_POIDS + Carnets_att$POULET
 Carnets_att$MG_POIDS <- Carnets_att$MGA_POIDS + Carnets_att$MGV_POIDS
 Carnets_att$PDTS_DISCRETIONNAIRES_POIDS <-   Carnets_att$CEREALES_PD_POIDS + Carnets_att$DESSERTS_LACTES_POIDS + Carnets_att$PDTS_SUCRES_POIDS + Carnets_att$SAUCES_POIDS  + Carnets_att$SNACKS_AUTRES_POIDS 
 Carnets_att$SSB_POIDS <-  Carnets_att$SODAS_SUCRES_POIDS + Carnets_att$SODAS_LIGHT_POIDS +Carnets_att$FRUITS_JUS_POIDS 
+#Ajouter les variables energy densite / POids Kcal et BUdget total
+
+Carnets_att$SOMME_POIDS_KCAL <-  Carnets_att$SOMME_CARNET_KCAL
+Carnets_att$energy_densite <- (Carnets_att$KCAL_SANS_BOISSON/(Carnets_att$SOMME_CARNET_HORS_BOISSON*1000))
+Carnets_att$energy_densite <- Carnets_att$energy_densite*100
+Carnets_att$depense_alim_uc <- Carnets_att$Dépense_alim/ Carnets_att$UC_TI
 
 
 
@@ -598,4 +605,34 @@ tab_balance_all <- Carnets_att %>%
 tab_balance_LE <- Carnets_att %>%
   filter(!is.na(groupe), str_detect(Identifiant, "^LE")) %>%
   make_group_balance_table(subset_label = "(voie_de_recrutement = 'LE')")
+
+
+#Telechargement 
+options(scipen = 999)
+wb <- createWorkbook()
+
+addWorksheet(wb, "tab_socio_demo")
+writeData(wb, sheet = "tab_socio_demo", tab_socio_demo, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_balance_all")
+writeData(wb, sheet = "tab_balance_all", tab_balance_all, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_balance_LE")
+writeData(wb, sheet = "tab_balance_LE", tab_balance_LE, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_attrition_g0")
+writeData(wb, sheet = "tab_attrition_g0", tab_attrition_g0, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_attrition_g0_LE")
+writeData(wb, sheet = "tab_attrition_g0_LE", tab_attrition_g0_LE, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_attrition_g1")
+writeData(wb, sheet = "tab_attrition_g1", tab_attrition_g1, colNames = TRUE, rowNames = TRUE)
+
+addWorksheet(wb, "tab_attrition_g1_LE")
+writeData(wb, sheet = "tab_attrition_g1_LE", tab_attrition_g1_LE, colNames = TRUE, rowNames = TRUE)
+
+saveWorkbook(wb, "resultats_attrition.xlsx", overwrite = TRUE)
+
+saveWorkbook(wb,(paste0("Données analysées - Article N°1 chèques/Publis/resultats_attrition.xlsx")))
 

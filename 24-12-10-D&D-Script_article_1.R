@@ -61,21 +61,42 @@ sgsdata <- sgsdata %>%
 
 ##COMPLIANCE ------------------------------
 #Prop montant théorique saisie
-##result_comp2 <- sgsdata %>%
-##  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
-##            Periode ==1 ) #& Campagne ==1 )
+result_comp2 <- sgsdata %>%
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
+            Periode ==1 & Campagne ==2   )
+
+
+##Remboursement 
+#mean(result_comp2$pourcentage_remboursé_avant_la_fin)
+##1 : 95%
+##2 : 79%
+#mean(result_comp2$pourcentage_remboursé_après_la_fin)
+##2 : 17%     
+#mean(result_comp2$pourcentage_remboursé_non_remboursé)
+##2 : 4%
+#
+result_comp2 %>%
+  summarise(
+    mean = mean(Prop_montant_theorique_saisie, na.rm = TRUE),
+    sd   = sd(Prop_montant_theorique_saisie, na.rm = TRUE),
+    min  = min(Prop_montant_theorique_saisie, na.rm = TRUE),
+    max  = max(Prop_montant_theorique_saisie, na.rm = TRUE),
+    n    = sum(!is.na(Prop_montant_theorique_saisie))
+  )
+
+##37% Montant théorique saisi première campagne
+##104% Deuxième campagne
 ##
-#mean(result_comp2$Prop_montant_theorique_saisie)
 
 result_comp2 <- sgsdata %>%
   filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
-           Campagne ==2 &  Periode ==1   &        Prop_montant_theorique_saisie >= 0.3 &
-          Prop_montant_theorique_saisie <= 1.7
+             Periode ==1   &        Prop_montant_theorique_saisie >= 0.3 &
+          Prop_montant_theorique_saisie <= 1.7 & Campagne ==1
            )
 
 
 result_comp2$comp_carnet <- ifelse(
-  result_comp2$compliance >= 0.7 & 
+  result_comp2$compliance >= 0.7  &
     result_comp2$Prop_montant_theorique_saisie >= 0.3 & 
     result_comp2$Prop_montant_theorique_saisie <= 1.7,
   1, 
@@ -84,10 +105,15 @@ result_comp2$comp_carnet <- ifelse(
 
 result_comp2 %>%
   count(comp_carnet) %>%
-  mutate(prop = n / sum(n))
+  mutate(prop = n)
 
+result_comp2 <- sgsdata %>%
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & groupe ==1 &
+           Periode ==1  & Campagne ==1 )
 
-
+result_comp2 %>%
+  count(Traitement) %>%
+  mutate(prop = n)
 
 
 #result_comp2$Les.avez.vous.utilises. == "Oui certains"
@@ -198,11 +224,11 @@ ids_groupe1_camp2 <- sgsdata_IT %>%
 
 ids_combines <- bind_rows(ids_groupe0, ids_groupe1_camp1, ids_groupe1_camp2)
 sgsdata_TR <- sgsdata_IT %>% semi_join(ids_combines, by = "Identifiant")
-48+57
 
 sgsdata_LE <- subset(sgsdata_IT, voie_de_recrutement == "LE")
-
-
+sgsdata_C1 <- subset(sgsdata_IT, Campagne ==1 & Mesure=="Carnet"& Periode==1)
+sum(sgsdata_C1$groupe==0)
+#95 (traités) & 96 controles
 
 # Liste des filtres à appliquer
 filter_conditions <- list(
@@ -2087,31 +2113,27 @@ result_all <- bind_rows(result_IT, result_TR, result_LE, ) %>%
 # Sous-ensemble des données pour Carnet
 
 sgsdata_IT <- sgsdata %>%
-  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==1  )
+  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300"  )
 
 ## Sélection des groupes pour le filtrage
-#ids_groupe0 <- sgsdata_IT %>% filter(groupe == 0 ) %>% select(Identifiant) %>% distinct()
-#ids_groupe1_camp1 <- sgsdata_IT %>% 
-#  filter(groupe == 1, Campagne == 1, utilisation2_FFQ == 1, limitation_FFQ == 1 , Identifiant != "6348-Episourire") %>% 
-#  select(Identifiant) %>% distinct()
-#ids_groupe1_camp2 <- sgsdata_IT %>% 
-#  filter(groupe == 1, Campagne == 2,
-#         Prop_montant_theorique_saisie >= 0.3, 
-#         Prop_montant_theorique_saisie <= 1.7,
-#         compliance >= 0.7& Periode==1 ) %>% 
-#  select(Identifiant) %>% distinct()
-#
-#ids_combines <- bind_rows(ids_groupe0, ids_groupe1_camp1, ids_groupe1_camp2)
-#sgsdata_TR <- sgsdata_IT %>% semi_join(ids_combines, by = "Identifiant")
+ids_groupe0 <- sgsdata_IT %>% filter(groupe == 0, Periode == 1) %>% select(Identifiant) %>% distinct()
+ids_groupe1_camp1 <- sgsdata_IT %>% 
+  filter(groupe == 1, Campagne == 1, utilisation2_FFQ == 1, limitation_FFQ == 1, Periode == 1) %>% 
+  select(Identifiant) %>% distinct()
+ids_groupe1_camp2 <- sgsdata_IT %>% 
+  filter(groupe == 1, Campagne == 2,
+         Prop_montant_theorique_saisie >= 0.3, 
+         Prop_montant_theorique_saisie <= 1.7,
+         compliance >= 0.7, Periode == 1) %>% 
+  select(Identifiant) %>% distinct()
 
-#sgsdata_LE <- subset(sgsdata_IT, voie_de_recrutement == "LE", Identifiant != "6348-Episourire")
+ids_combines <- bind_rows(ids_groupe0, ids_groupe1_camp1, ids_groupe1_camp2)
+sgsdata_TR <- sgsdata_IT %>% semi_join(ids_combines, by = "Identifiant")
 
-sgsdata_TR <- sgsdata %>%
-  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==2  & voie_de_recrutement == "PS" )
+sgsdata_LE <- subset(sgsdata_IT, voie_de_recrutement == "LE")
 
+sgsdata_C1 <- subset(sgsdata_IT, Campagne ==1)
 
-sgsdata_LE <- sgsdata %>%
-  filter(!is.na(Mesure) & Mesure == "Carnet" & Identifiant != "LE300" & Campagne ==2  & voie_de_recrutement == "LE" )
 
 
 # 1) Créer deux listes de modèles, une pour TR et une pour LE
@@ -2128,6 +2150,11 @@ Poids_eligibleLE           <- feols(q0 ~ Traitement| Identifiant + Periode, data
 Prix_unitaire_eligibleLE   <- feols(p0 ~ Traitement| Identifiant + Periode, data = sgsdata_LE, vcov = ~Identifiant)
 MLE   <- feols(M0 ~ Traitement| Identifiant + Periode, data = sgsdata_LE, vcov = ~Identifiant)
   
+Poids_eligibleC1       <- feols(q0 ~ Traitement| Identifiant + Periode, data = sgsdata_C1, vcov = ~Identifiant)
+Prix_unitaire_eligibleC1 <- feols(p0 ~ Traitement| Identifiant + Periode, data = sgsdata_C1, vcov = ~Identifiant)
+MC1   <- feols(M0 ~ Traitement| Identifiant + Periode, data = sgsdata_C1, vcov = ~Identifiant)
+
+
 
 
 sgsdata_IT$Coeff_q0 <-   coef(Poids_eligibleTous)["Traitement"]
@@ -2143,6 +2170,10 @@ sgsdata_LE$Coeff_p0 <-   coef(Prix_unitaire_eligibleLE)["Traitement"]
 sgsdata_LE$Coeff_M0 <-   coef(MLE)["Traitement"]
 
 
+sgsdata_C1$Coeff_q0 <-   coef(Poids_eligibleC1)["Traitement"]
+sgsdata_C1$Coeff_p0 <-   coef(Prix_unitaire_eligibleC1)["Traitement"]
+sgsdata_C1$Coeff_M0 <-   coef(MC1)["Traitement"]
+
 sgsdata_IT$DID_q0 <- sgsdata_IT$q0 - sgsdata_IT$Coeff_q0
 sgsdata_IT$DID_p0 <- sgsdata_IT$p0 - sgsdata_IT$Coeff_p0
 sgsdata_IT$DID_M0 <- sgsdata_IT$M0 - sgsdata_IT$Coeff_M0
@@ -2155,6 +2186,10 @@ sgsdata_LE$DID_q0 <- sgsdata_LE$q0 - sgsdata_LE$Coeff_q0
 sgsdata_LE$DID_p0 <- sgsdata_LE$p0 - sgsdata_LE$Coeff_p0
 sgsdata_LE$DID_M0 <- sgsdata_LE$M0 - sgsdata_LE$Coeff_M0
 
+sgsdata_C1$DID_q0 <- sgsdata_C1$q0 - sgsdata_C1$Coeff_q0
+sgsdata_C1$DID_p0 <- sgsdata_C1$p0 - sgsdata_C1$Coeff_p0
+sgsdata_C1$DID_M0 <- sgsdata_C1$M0 - sgsdata_C1$Coeff_M0
+
 
 
 #CALCUL EPI /EQI
@@ -2164,7 +2199,8 @@ sgsdata_LE$DID_M0 <- sgsdata_LE$M0 - sgsdata_LE$Coeff_M0
 list_data <- list(
   Tous = sgsdata_IT,
   TR   = sgsdata_TR,
-  LE   = sgsdata_LE
+  LE   = sgsdata_LE,
+  C1 = sgsdata_C1
 )
 
 # 2. Fonction enrichie pour calculer et renvoyer TOUTES les stats
@@ -2179,7 +2215,7 @@ calc_did <- function(data, label) {
       mean_M0 = mean(M0),
       mean_q0 = mean(q0),
       mean_p0 = mean(p0), 
-      Cheque_UC = mean(cheque_theo / UC_TI_arrondi),
+      Cheque_UC = mean(cheque_theo / UC_TI),
       Compliance_booklet = mean(compliance),
       Prop_NR = mean(pourcentage_remboursé_avant_la_fin),
       
@@ -2270,7 +2306,8 @@ resultats <- did_refs
 filter_conditions <- list(
   "Tous" = sgsdata_IT,
   "TR" = sgsdata_TR,
-  "LE" = sgsdata_LE
+  "LE" = sgsdata_LE,
+  "C1" = sgsdata_C1
 )
 
 
