@@ -1,4 +1,4 @@
-#Importation des packages -------------------
+#Importing packages -------------------
 rm(list = ls())
 library(haven);library(readxl);library(tidyverse);library(openxlsx);
 library(readxl);library(dplyr);library(broom);library(scales);library(modelsummary)
@@ -6,13 +6,8 @@ library(ggplot2);library(effsize);library(lfe);library(ggpubr);library(vtable);l
 library("gridExtra");library("RColorBrewer");library(reshape2);library(Metrics)
 library("poLCA");library("webshot")
 
-#Chargement de l'envrionnement de travail -----------------
-researcher<-"adenieul" #"vbellassen" edumont
-if (researcher == "adenieul") {
-  setwd <- paste0("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")
-} else {
-  setwd(paste0("C:/Users/",researcher,"/Owncloud/TI Dijon/donnees"))
-}
+#Loading the working environment -----------------
+
 
 #Nov 22
 Carnet_nov_22 <- read.xlsx(
@@ -62,8 +57,8 @@ sgsdata<- read.xlsx(
     "Fichiers_nettoyés/Fichier_traitement/",
     "sgsdata.xlsx",
     sep = ""
-
-))
+    
+  ))
 
 #Mars24
 Carnet_mars_24<- read.xlsx(
@@ -86,16 +81,16 @@ Carnet_mars_24 <- Carnet_mars_24 %>%  semi_join(sgsdata, by = "Identifiant")
 to_remove <- c("EAU", "CAFE_THE", "EPICES_CONDIMENTS", "AUTRE", "ALCOOL", "NA", "LAIT",
                "FRUITS_JUS", "SODAS_SUCRES", "SODAS_LIGHT")
 
-# fonction de nettoyage
+# cleaning function
 clean_groupe <- function(df) {
   df %>%
     filter(
-      !groupe_TI_TdC %in% to_remove,   # exclut les modalités indésirables
-      !is.na(groupe_TI_TdC)            # exclut les NA
+      !groupe_TI_TdC %in% to_remove,   # excludes the unwanted categories
+      !is.na(groupe_TI_TdC)            # excludes the NAs
     )
 }
 
-# application à vos 4 tables
+# applying it to the 4 tables
 Carnet_nov_22  <- clean_groupe(Carnet_nov_22)
 Carnet_mars_23 <- clean_groupe(Carnet_mars_23)
 Carnet_nov_23  <- clean_groupe(Carnet_nov_23)
@@ -103,7 +98,7 @@ Carnet_mars_24 <- clean_groupe(Carnet_mars_24)
 
 #nov 22
 recode_groupe_TI_TdC <- function(df, col = "groupe_TI_TdC") {
-  # Liste des nouveaux groupes et de leurs niveaux originaux
+  # List of the new groups and their original levels
   mapping <- list(
     FV = c("FRUITS", "FRUITS_SECS", "NOIX", "LEGUMES"),
     FEC = c("FEC_NON_RAF", "FEC_RAF"),
@@ -117,7 +112,7 @@ recode_groupe_TI_TdC <- function(df, col = "groupe_TI_TdC") {
     SSB = c("SODAS_SUCRES", "SODAS_LIGHT", "FRUITS_JUS")
   )
   
-  # Boucle sur chaque groupe pour faire le recodage
+  # Loop over each group to perform the recoding
   for (new_group in names(mapping)) {
     levels_to_replace <- mapping[[new_group]]
     idx <- df[[col]] %in% levels_to_replace
@@ -127,8 +122,8 @@ recode_groupe_TI_TdC <- function(df, col = "groupe_TI_TdC") {
   return(df)
 }
 
-# 3. Application aux dataframes pour le lieu "Lieu1"
-# Recodage des groupes
+# 3. Applying it to the dataframes for the "Lieu1" location
+# Recoding the groups
 Carnet_nov_22   <- recode_groupe_TI_TdC(Carnet_nov_22)
 Carnet_nov_23   <- recode_groupe_TI_TdC(Carnet_nov_23)
 Carnet_mars_23  <- recode_groupe_TI_TdC(Carnet_mars_23)
@@ -136,13 +131,13 @@ Carnet_mars_24  <- recode_groupe_TI_TdC(Carnet_mars_24)
 
 #nov 22
 recode_lieu <- function(df, col = "Lieu1") {
-  # Liste des nouveaux groupes et de leurs niveaux originaux
+  # List of the new groups and their original levels
   mapping <- list(
     GMS = c("Hypermarchés", "Supermarchés"),
     RHD = c("RHD_COM", "RHD_COL")
   )
   
-  # Boucle sur chaque groupe pour faire le recodage
+  # Loop over each group to perform the recoding
   for (new_group in names(mapping)) {
     levels_to_replace <- mapping[[new_group]]
     idx <- df[[col]] %in% levels_to_replace
@@ -152,8 +147,8 @@ recode_lieu <- function(df, col = "Lieu1") {
   return(df)
 }
 
-# 3. Application aux dataframes pour le lieu "Lieu1"
-# Recodage des groupes
+# 3. Applying it to the dataframes for the "Lieu1" location
+# Recoding the groups
 Carnet_nov_22   <- recode_lieu(Carnet_nov_22)
 Carnet_nov_23   <- recode_lieu(Carnet_nov_23)
 Carnet_mars_23  <- recode_lieu(Carnet_mars_23)
@@ -169,7 +164,7 @@ Carnet_mars_24  <- recode_lieu(Carnet_mars_24)
 
 
 
-# 1. On re-crée la liste de data.frames d'origine
+# 1. Recreating the original list of data.frames
 dfs <- list(
   nov_22  = Carnet_nov_22,
   mars_23 = Carnet_mars_23,
@@ -178,26 +173,26 @@ dfs <- list(
 )
 
 
-#CREATION colonne voie de recrutement ----------------------------------
+#CREATING the recruitment channel column ----------------------------------
 Carnet_nov_22 <- Carnet_nov_22 %>%
-  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Suppression des chiffres
-  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Suppression des tirets non entourés de caractères non numériques
+  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Removing the digits
+  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Removing dashes not surrounded by non-numeric characters
 Carnet_nov_22$voie_de_recrutement <- ifelse((Carnet_nov_22$voie_de_recrutement =="Episourire" |Carnet_nov_22$voie_de_recrutement =="Epimut"|Carnet_nov_22$voie_de_recrutement =="A-Epimut"),("Epicerie"), (Carnet_nov_22$voie_de_recrutement) )
 Carnet_nov_22$voie_de_recrutement <- ifelse((Carnet_nov_22$voie_de_recrutement =="SP-CCAS"|Carnet_nov_22$voie_de_recrutement =="PE-CCAS"),("CCAS"), (Carnet_nov_22$voie_de_recrutement) )
 
 Carnet_mars_23 <- Carnet_mars_23 %>%
-  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Suppression des chiffres
-  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Suppression des tirets non entourés de caractères non numériques
+  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Removing the digits
+  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Removing dashes not surrounded by non-numeric characters
 Carnet_mars_23$voie_de_recrutement <- ifelse((Carnet_mars_23$voie_de_recrutement =="Episourire" |Carnet_mars_23$voie_de_recrutement =="Epimut"|Carnet_mars_23$voie_de_recrutement =="A-Epimut"),("Epicerie"), (Carnet_mars_23$voie_de_recrutement) )
 Carnet_mars_23$voie_de_recrutement <- ifelse((Carnet_mars_23$voie_de_recrutement =="SP-CCAS"|Carnet_mars_23$voie_de_recrutement =="PE-CCAS"),("CCAS"), (Carnet_mars_23$voie_de_recrutement) )
 
 Carnet_nov_23 <- Carnet_nov_23 %>%
-  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Suppression des chiffres
-  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Suppression des tirets non entourés de caractères non numériques
+  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Removing the digits
+  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Removing dashes not surrounded by non-numeric characters
 
 Carnet_mars_24 <- Carnet_mars_24 %>%
-  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Suppression des chiffres
-  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Suppression des tirets non entourés de caractères non numériques
+  mutate(voie_de_recrutement = gsub("[0-9]", "", Identifiant)) %>%  # Removing the digits
+  mutate(voie_de_recrutement = gsub("(^-|-$)|(?<![A-Za-z])-|-(?![A-Za-z])", "", voie_de_recrutement, perl=TRUE))  # Removing dashes not surrounded by non-numeric characters
 
 
 Carnet_nov_22_Epic <- Carnet_nov_22 %>% filter(voie_de_recrutement == "Epicerie" )
@@ -215,7 +210,7 @@ Carnet_nov_23_LE <- Carnet_nov_23 %>% filter(voie_de_recrutement == "LE" )
 Carnet_nov_23_PS <- Carnet_nov_23 %>% filter(voie_de_recrutement == "PS" )
 Carnet_mars_24_LE <- Carnet_mars_24 %>% filter(voie_de_recrutement == "LE" )
 Carnet_mars_24_PS <- Carnet_mars_24 %>% filter(voie_de_recrutement == "PS" )
-#Poids des epiceries sociales chez les personnes identifiées CCAS
+#Weight of the social grocery stores among people identified as CCAS
 #epicerie_sociale <- Carnet_nov_22_CCAS %>%
 #  group_by(Identifiant) %>%
 #  filter(any(Lieu1 == "Epicerie")) %>%
@@ -240,9 +235,9 @@ unique(Carnet_nov_23_LE$Identifiant)
 unique(Carnet_nov_23_PS$Identifiant)
 print(unique(Carnet_nov_22$Identifiant))
 
-##Répartition des lieus d'appro par catégorie d'aliments -------------------------
+##Breakdown of sourcing locations by food category -------------------------
 
-# 2. Fonction de résumé qui groupe sur Lieu1 et recalcule totaux + % par Lieu1
+# 2. Summary function that groups by Lieu1 and recalculates totals + % by Lieu1
 summarise_by_Lieu1_cat <- function(df) {
   df %>%
     group_by(Lieu1) %>%
@@ -250,7 +245,7 @@ summarise_by_Lieu1_cat <- function(df) {
       total_poids = sum(Poids_consomme, na.rm = TRUE),
       .groups = "drop_last"
     ) %>%
-    # maintenant, pour chacun des Lieu1 on calcule le pourcentage interne
+    # now, for each Lieu1 we calculate the internal percentage
     mutate(
       pct_poids = total_poids / sum(total_poids) * 100,
     ) %>%
@@ -262,10 +257,10 @@ résumé_nov22_CCAS <- summarise_by_Lieu1_cat(Carnet_nov_22_CCAS)
 résumé_nov23_LE <- summarise_by_Lieu1_cat(Carnet_nov_23_LE)
 résumé_nov23_PS <- summarise_by_Lieu1_cat(Carnet_nov_23_PS)
 
-#CAS spécifique
+#SPECIFIC case
 #résumé_nov22_EP <- summarise_by_Lieu1_cat(epicerie_sociale)
 #résumé_nov22_spf <- summarise_by_Lieu1_cat(spf)
-##Répartition des catégories d'aliments par lieu d'appro ----------------------
+##Breakdown of food categories by sourcing location ----------------------
 
 
 summarise_by_cat_lieu <- function(df) {
@@ -276,7 +271,7 @@ summarise_by_cat_lieu <- function(df) {
       total_prix  = sum(Prix,       na.rm = TRUE),
       .groups = "drop_last"
     ) %>%
-    # pour chaque catégorie, on calcule le % de chaque Lieu1
+    # for each category, we calculate the % of each Lieu1
     group_by(groupe_TI_TdC) %>%
     mutate(
       pct_poids = total_poids / sum(total_poids) * 100,
@@ -326,30 +321,30 @@ poids_pourcentages_nov23_PS_bis <- résumé_nov23_PS_bis %>%
     values_from = pct_poids,
     values_fill = 0
   )
-##Répartition des catégories d'aliments par voie de recrutement ----------------------
+##Breakdown of food categories by recruitment channel ----------------------
 
 summarise_recrutement <- function(df) {
-  # Calcul du total global avant tout
+  # Calculating the overall total first
   total_global <- sum(df$Poids_consomme, na.rm = TRUE)
   
   df %>%
     group_by(groupe_TI_TdC, voie_de_recrutement) %>%
     summarise(
       total_poids = sum(Poids_consomme, na.rm = TRUE),
-      .groups     = "drop"           # on lâche immédiatement tous les groupes
+      .groups     = "drop"           # immediately dropping all the groups
     ) %>%
-    # regrouper par catégorie seule pour calculer le dénominateur
+    # regrouping by category alone to calculate the denominator
     group_by(groupe_TI_TdC) %>%
     mutate(
-      total_poids_categorie = sum(total_poids),            # somme par catégorie
+      total_poids_categorie = sum(total_poids),            # sum per category
       pct_poids              = total_poids / total_poids_categorie * 100
     ) %>%
     ungroup() %>%
-    # enrichir chaque ligne avec le total global
+    # enriching each row with the overall total
     mutate(
       total_poids_global = total_global
     ) %>%
-    # regrouper par catégorie seule pour calculer le dénominateur
+    # regrouping by category alone to calculate the denominator
     group_by(groupe_TI_TdC) %>%
     mutate(
       pct_poids_vf              = total_poids /total_poids_global * 100
@@ -363,8 +358,8 @@ résumé_nov23_LE_bis_bis <- summarise_recrutement(Carnet_nov_23_LE)
 résumé_nov23_PS_bis_bis <- summarise_recrutement(Carnet_nov_23_PS)
 
 
-##Type de produits éligibles  --------------
-#Cru/Surgelé/Appertisé
+##Type of eligible products  --------------
+#Raw/Frozen/Canned
 filtre <- resultats_codachats %>% 
   filter(groupe_TI_TdC1 %in% c("FRUITS", "LEGUMES", "LEG_SECS", "FRUITS_SECS", "NOIX"))
 
@@ -380,11 +375,11 @@ filtre <- filtre %>%
       str_detect(LibelleCIQUAL, regex("Noisette|Noix|Sèche|Sec|graine|séchée|grillée|Cacahuète|Amande|graîne", ignore_case = TRUE)) ~ "Sec",
       TRUE ~ NA_character_
     ),
-    # Ajout du préfixe TI_TdC (ou colonne groupe_TI_TdC1)
+    # Adding the TI_TdC prefix (or the groupe_TI_TdC1 column)
     gamme = ifelse(!is.na(gamme), paste0(groupe_TI_TdC1, "_", gamme), NA)
   )
 
-# Tableau long : un total par Identifiant x gamme
+# Long table: one total per Identifiant x range
 table_gamme_long <- filtre %>% 
   group_by(Identifiant, gamme) %>% 
   summarise(
@@ -398,7 +393,7 @@ table_gamme_long <- filtre %>%
 
 
 
-# Tableau large : une colonne par type de gamme
+# Wide table: one column per range type
 table_gamme_wide <- table_gamme_long %>% 
   pivot_wider(
     names_from = gamme,
@@ -409,7 +404,7 @@ table_gamme_wide <- table_gamme_long %>%
 table_gamme_wide <- table_gamme_wide[, !names(table_gamme_wide) %in% "UC_TI"]
 
 
-# Répartition par Identifiant x gamme x Lieu1
+# Breakdown by Identifiant x range x Lieu1
 table_lieu_gamme_long <- filtre %>% 
   group_by(Identifiant, gamme, Lieu1) %>% 
   summarise(
@@ -426,7 +421,7 @@ table_lieu_gamme_long <- table_lieu_gamme_long %>%
 table_lieu_gamme_long <- table_lieu_gamme_long[, !(names(table_lieu_gamme_long) %in% c("Poids_consomme_vf", "UC_TI","gamme","Lieu1"))]
 
 
-# Passage en large : une colonne par type de gamme_lieu
+# Switching to wide format: one column per gamme_lieu type
 table_gamme <- table_lieu_gamme_long %>%
   pivot_wider(
     names_from  = gamme_lieu,
@@ -435,8 +430,8 @@ table_gamme <- table_lieu_gamme_long %>%
   )
 
 
-##TELECHARGEMENT----------------------------------
-# Créer un nouvel objet workbook
+##DOWNLOAD----------------------------------------
+# Create a new workbook object
 wb <- createWorkbook()
 
 addWorksheet(wb, "rec_nov22_Epic")
@@ -465,7 +460,7 @@ writeData(wb, sheet = "cat_nov23_LE", poids_pourcentages_nov23_LE_bis  )
 
 addWorksheet(wb, "cat_nov23_PS")
 writeData(wb, sheet = "cat_nov23_PS", poids_pourcentages_nov23_PS_bis)
-          
+
 
 addWorksheet(wb, "lieu_nov22_Epic")
 writeData(wb, sheet = "lieu_nov22_Epic", résumé_nov22_Epic  )
@@ -479,7 +474,7 @@ writeData(wb, sheet = "lieu_nov23_LE", résumé_nov23_LE )
 addWorksheet(wb, "lieu_nov23_PS")
 writeData(wb, sheet = "lieu_nov23_PS", résumé_nov23_PS )
 
-saveWorkbook(wb,(paste0("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichier_traitement/stat_desc_poidsb.xlsx")))
+saveWorkbook(wb,(paste0("stat_desc_poidsb.xlsx")))
 
 
 
@@ -496,9 +491,9 @@ sgsdata<- read.xlsx(
 sgsdata <- sgsdata %>%
   filter(Mesure == "Carnet")
 
-#Selection compliant
+#Selecting compliant
 
-# 1. Définir les deux ensembles d'identifiants
+# 1. Defining the two sets of identifiers
 ids_groupe1_camp1 <- sgsdata %>% 
   filter(groupe == 1, Campagne == 1, utilisation2_FFQ == 1, limitation_FFQ == 1, Periode == 1) %>% 
   pull(Identifiant)
@@ -510,10 +505,10 @@ ids_groupe1_camp2 <- sgsdata %>%
          compliance >= 0.7, Periode == 1) %>% 
   pull(Identifiant)
 
-# 2. Fusionner les deux ensembles
+# 2. Merging the two sets
 ids_compliant_all <- union(ids_groupe1_camp1, ids_groupe1_camp2)
 
-# 3. Créer la colonne dans sgsdata
+# 3. Creating the column in sgsdata
 sgsdata <- sgsdata %>% 
   mutate(Compliant_all = if_else(Identifiant %in% ids_compliant_all, 1, 0))
 
@@ -523,21 +518,21 @@ library(ggplot2)
 library(dplyr)
 library(ggplot2)
 
-# --- Préparation des sous-échantillons ---
+# --- Preparing the subsamples ---
 base_all <- sgsdata %>%
   filter(Mesure == "Carnet")
 
-# Sous-échantillon compliant : uniquement traités compliant, + tous les témoins
+# Compliant subsample: only compliant treated individuals, + all controls
 base_compliant <- base_all %>%
   filter((groupe == 1 & Compliant_all == 1) | groupe == 0)
 
 
 
 
-###GRAPH DE DIFF n DIFF
+###DIFF-IN-DIFF GRAPH
 
 
-# ---- Dépendances ----
+# ---- Dependencies ----
 library(dplyr)
 library(ggplot2)
 library(patchwork)
@@ -545,17 +540,17 @@ library(rlang)
 
 plot_pair_outcome <- function(
     data,
-    var,                                # "FV_POIDS" ou FV_POIDS
+    var,                                # "FV_POIDS" or FV_POIDS
     y_label       = "Valeur (unité)",
     title         = "Titre global",
     left_subtitle = "Sous-titre panneau gauche",
     right_subtitle= "Sous-titre panneau droit",
-    ref_line      = 400,                # mettre NULL pour désactiver
+    ref_line      = 400,                # set to NULL to disable
     ref_text      = "Référence",
-    multiply_by   = 1000,               # ex: kg -> g (mettre 1 si déjà en g)
-    show_ref      = TRUE,               # <-- NOUVEAU : active/désactive l’affichage de la référence
-    ref_color     = "darkgreen",        # optionnel : couleur de la ref
-    ref_text_nudge= 5                   # optionnel : décalage vertical du texte de ref
+    multiply_by   = 1000,               # e.g.: kg -> g (set to 1 if already in g)
+    show_ref      = TRUE,               # <-- NEW: enables/disables displaying the reference
+    ref_color     = "darkgreen",        # optional: reference color
+    ref_text_nudge= 5                   # optional: vertical offset of the reference text
 ){
   var_sym <- ensym(var)
   var_chr <- as_string(var_sym)
@@ -630,7 +625,7 @@ plot_pair_outcome <- function(
       geom_point(size = 2) +
       geom_line(linewidth = 1)
     
-    # --- Affichage optionnel de la référence ---
+    # --- Optional display of the reference ---
     if (isTRUE(show_ref) && !is.null(ref_line)) {
       p <- p +
         geom_hline(yintercept = ref_line, linetype = "dashed", color = ref_color) +
@@ -686,17 +681,17 @@ plot_pair_outcome <- function(
     )
 }
 
-# ---- Exemple d'appel (reprend les textes actuels) ----
+# ---- Example call (reuses the current texts) ----
 figure_finale <- plot_pair_outcome(
   data          = sgsdata,
-  var           = LEG_SECS_POIDS,  # ou "FV_POIDS"
+  var           = LEG_SECS_POIDS,  # or "FV_POIDS"
   y_label       = "Legumes",
   title         = "Effects of the intervention on legumes intake",
   left_subtitle = "Comparison control, intention to treat and compliant",
   right_subtitle= "All households in the automated-control subgroup",
   ref_line      = 57,
   ref_text      = "PNNS Recommendation",
-  multiply_by   = 1000      # si FV_POIDS est en kg -> g
+  multiply_by   = 1000      # if FV_POIDS is in kg -> g
 )
 
 
@@ -704,13 +699,13 @@ figure_finale
 
 
 
-# ---- Dépendances ----
+# ---- Dependencies ----
 library(dplyr)
 library(ggplot2)
 library(patchwork)
 library(rlang)
 
-# ---- Fonction : barres de proportion atteignant le seuil ----
+# ---- Function: bars showing the proportion reaching the threshold ----
 plot_pair_bar_target <- function(
     data,
     var,
@@ -723,10 +718,10 @@ plot_pair_bar_target <- function(
   var_sym <- ensym(var)
   var_chr <- as_string(var_sym)
   
-  # --- Base carnet ---
+  # --- Booklet base ---
   sgs <- data %>% filter(Mesure == "Carnet")
   
-  # --- Définition "utilisation conforme" (ta logique existante) ---
+  # --- Definition of "compliant use" (your existing logic) ---
   ids_g1_c1 <- sgs %>%
     filter(groupe == 1, Campagne == 1,
            utilisation2_FFQ == 1, limitation_FFQ == 1, Periode == 1) %>%
@@ -743,11 +738,11 @@ plot_pair_bar_target <- function(
   sgs <- sgs %>%
     mutate(Compliant_all = if_else(Identifiant %in% ids_compliant_all, 1L, 0L))
   
-  # --- Sous-échantillons ---
+  # --- Subsamples ---
   base_all <- sgs
   base_compliant <- base_all %>% filter((groupe == 1 & Compliant_all == 1) | groupe == 0)
   
-  # --- Fonction interne : part de ménages atteignant le seuil ---
+  # --- Internal function: share of households reaching the threshold ---
   agg_prop <- function(df, label_trait, label_temoins){
     n_temoins <- df %>% filter(groupe == 0) %>% distinct(Identifiant) %>% nrow()
     n_trait   <- df %>% filter(groupe == 1) %>% distinct(Identifiant) %>% nrow()
@@ -769,18 +764,18 @@ plot_pair_bar_target <- function(
       )
   }
   
-  # --- Panneau gauche (toute pop + conformes) ---
+  # --- Left panel (full pop + compliant) ---
   prop_all  <- agg_prop(base_all, "Treatment : intention to treat", "Control")
   prop_comp <- agg_prop(base_compliant, "Treatment : compliant", "Control") %>%
     filter(groupe == 1)
   
   props_left <- bind_rows(prop_all, prop_comp)
   
-  # --- Panneau droit (LE uniquement) ---
+  # --- Right panel (LE only) ---
   base_LE <- sgs %>% filter(voie_de_recrutement == "LE")
   props_right <- agg_prop(base_LE, "Treated", "Control")
   
-  # --- Fonction interne : diagramme en barres ---
+  # --- Internal function: bar chart ---
   build_bar_panel <- function(df, subtitle_here) {
     ggplot(df, aes(x = Periode, y = prop_pc, fill = SousGroupe)) +
       geom_col(position = position_dodge(width = 0.8), width = 0.7) +
@@ -809,16 +804,16 @@ plot_pair_bar_target <- function(
       )
   }
   
-  # --- Création des deux panneaux avec leurs légendes respectives ---
+  # --- Creating the two panels with their respective legends ---
   left  <- build_bar_panel(props_left,  left_subtitle)
   right <- build_bar_panel(props_right, right_subtitle)
   
-  # --- Assemblage : deux graphiques côte à côte, légendes sous chacun ---
+  # --- Assembly: two charts side by side, legends below each ---
   final_plot <- (
     (left / plot_spacer()) |
       (right / plot_spacer())
   ) +
-    plot_layout(heights = c(1, 0.05)) + # espace pour les légendes individuelles
+    plot_layout(heights = c(1, 0.05)) + # space for the individual legends
     plot_annotation(
       title = title,
       theme = theme(
@@ -829,7 +824,7 @@ plot_pair_bar_target <- function(
   return(final_plot)
 }
 
-# ---- Exemple d'appel ----
+# ---- Example call ----
 figure_bar_400 <- plot_pair_bar_target(
   data          = sgsdata,
   var           = LEG_SECS_POIDS,

@@ -1,4 +1,4 @@
-#Preparation des données ------------
+#Preparing the data ------------
 rm(list = ls())
 library(haven)
 library(readxl)
@@ -35,16 +35,9 @@ library(purrr)
 library(plotly)
 library(htmlwidgets)
 
-# Définir le répertoire de travail en fonction du chercheur
-researcher <- "adenieul"
-if (researcher == "adenieul") {
-  setwd("C:/Users/adenieul/ownCloud - Anaelle Denieul@cesaer-datas.inra.fr/TI Dijon/donnees")
-} else {
-  setwd(paste0("C:/Users/", researcher, "/Owncloud/TI Dijon/donnees"))
-}
 
-# Chargement des données
-sgsdata <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichier_traitement/sgsdata.xlsx")
+# Loading the data
+sgsdata <- read.xlsx("sgsdata.xlsx")
 
 
 sgsdata <- sgsdata %>%
@@ -67,7 +60,7 @@ library(purrr)
 library(tibble)
 library(stringr)
 
-# --- 0) S'assurer que 'Compliant' existe (même logique que précédemment) ---
+# --- 0) Making sure 'Compliant' exists (same logic as before) ---
 if (!"Compliant" %in% names(sgsdata)) {
   ids_groupe1_camp1 <- sgsdata %>% 
     filter(groupe == 1, Campagne == 1,
@@ -88,7 +81,7 @@ if (!"Compliant" %in% names(sgsdata)) {
     mutate(Compliant = if_else(Identifiant %in% ids_compliant_all, 1, 0))
 }
 
-# --- 1) Filtrage baseline ---
+# --- 1) Baseline filtering ---
 data <- sgsdata %>%
   filter(!is.na(Mesure),
          Mesure == "Carnet",
@@ -98,10 +91,10 @@ data <- sgsdata %>%
 
 data_LE <- data %>% filter(voie_de_recrutement == "LE")
 
-# Définition stricte des NonCompliant: traités mais non compliant
+# Strict definition of NonCompliant: treated but not compliant
 is_noncomp <- with(data, (groupe == 1 & Compliant == 0))
 
-# --- 2) Variables continues ---
+# --- 2) Continuous variables ---
 cont_vars <- c(
   "Age_Central", "Combien.de.personnes.vivent.dans.votre.foyer",
   "Différentiel_aide", "Part_Kcal_BIO", "Part_Kcal_Epiceries",
@@ -120,8 +113,7 @@ present_cont <- intersect(cont_vars, names(data))
 data    <- data    %>% mutate(across(all_of(present_cont), ~ suppressWarnings(as.numeric(.x))))
 data_LE <- data_LE %>% mutate(across(all_of(present_cont), ~ suppressWarnings(as.numeric(.x))))
 
-# --- 3) Fonctions p-values ---
-# Welch; mets var.equal=TRUE si tu veux Student strict
+# --- 3) p-value functions ---
 p_ci_cont <- function(x, g) {
   x0 <- x[g == 0 & !is.na(x)]
   x1 <- x[g == 1 & !is.na(x)]
@@ -151,7 +143,7 @@ val_eq <- function(x, target) str_trim(str_to_lower(as.character(x))) == str_tri
 is_yes <- function(x) str_to_upper(as.character(x)) %in% c("OUI","1","TRUE","YES")
 is_one <- function(x) suppressWarnings(as.numeric(x)) == 1
 
-# --- 4) CONTINUES : moyennes + p-values ---
+# --- 4) CONTINUOUS: averages + p-values ---
 cont_tbl <- tibble(Variable = present_cont) %>%
   mutate(
     Control         = map_dbl(Variable, ~ mean(data[[.x]][data$groupe == 0], na.rm = TRUE)),
@@ -159,16 +151,16 @@ cont_tbl <- tibble(Variable = present_cont) %>%
     Compliant       = map_dbl(Variable, ~ mean(data[[.x]][data$Compliant == 1], na.rm = TRUE)),
     p_CI            = map_dbl(Variable, ~ p_ci_cont(data[[.x]], data$groupe)),
     p_CC            = map_dbl(Variable, ~ p_cc_cont(data[[.x]], data$groupe, data$Compliant)),
-    # Sous-groupe LE
+    # LE subgroup
     Control_LE      = map_dbl(Variable, ~ mean(data_LE[[.x]][data_LE$groupe == 0], na.rm = TRUE)),
     Intervention_LE = map_dbl(Variable, ~ mean(data_LE[[.x]][data_LE$groupe == 1], na.rm = TRUE)),
     p_CI_LE         = map_dbl(Variable, ~ p_ci_cont(data_LE[[.x]], data_LE$groupe)),
-    # NonCompliant (traités mais Compliant==0) + p_CN
+    # NonCompliant (treated but Compliant==0) + p_CN
     NonCompliant    = map_dbl(Variable, ~ mean(data[[.x]][is_noncomp], na.rm = TRUE)),
     p_CN            = map_dbl(Variable, ~ p_cn_cont(data[[.x]], data$Compliant, is_noncomp))
   )
 
-# --- 5) CATEGORIELLES : % et p-values ---
+# --- 5) CATEGORICAL: % and p-values ---
 g    <- data$groupe
 comp <- data$Compliant
 g_LE <- data_LE$groupe
@@ -235,7 +227,7 @@ cat_tbl <- imap_dfr(cat_list, function(flag, lab){
   )
 })
 
-# --- 6) Totaux en tête ---
+# --- 6) Totals at the top ---
 totals <- tibble(
   Variable        = "Total participants (N)",
   Control         = sum(data$groupe == 0, na.rm = TRUE),
@@ -250,7 +242,7 @@ totals <- tibble(
   p_CN            = NA_real_
 )
 
-# --- 7) Assemblage final (NonCompliant en DERNIÈRE colonne) ---
+# --- 7) Final assembly (NonCompliant as the LAST column) ---
 tab_socio_demo <- bind_rows(
   totals,
   cat_tbl,
@@ -268,20 +260,28 @@ tab_socio_demo <- bind_rows(
     Intervention_LE = round(Intervention_LE, 3),
     p_CI_LE         = ifelse(is.na(p_CI_LE), NA, round(p_CI_LE, 4))
   ) %>%
-  # NonCompliant à la fin :
+  # NonCompliant at the end:
   select(Variable, Control, Intervention, Compliant, p_CI, p_CC,
          Control_LE, Intervention_LE, p_CI_LE, NonCompliant, p_CN)
 
 tab_socio_demo
 
 
+#attrition table 
+Carnets_Nov_22_att <- read.xlsx("Carnets_Tableaux_nov_22_attrition.xlsx")
+Carnets_Nov_23_att <- read.xlsx("Carnets_Tableaux_nov_23_attrition.xlsx")
+FFQ_Nov_22_att <- read.xlsx("FFQ_Tableaux_nov_22.xlsx")
+FFQ_Nov_23_att  <- read.xlsx("FFQ_Tableaux_nov_23.xlsx")
+Liste  <- read.xlsx("Liste traités_comp.xlsx")
 
-#tableau attrition 
-Carnets_Nov_22_att <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichiers_prétraités/Carnets_Tableaux_nov_22_attrition.xlsx")
-Carnets_Nov_23_att <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichiers_prétraités/Carnets_Tableaux_nov_23_attrition.xlsx")
-FFQ_Nov_22_att <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichiers_prétraités/FFQ_Tableaux_nov_22.xlsx")
-FFQ_Nov_23_att  <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichiers_prétraités/FFQ_Tableaux_nov_23.xlsx")
-Liste  <- read.xlsx("Données analysées - Article N°1 chèques/Tableaux_annexes/Liste traités_comp.xlsx")
+
+Carnets_Nov_22_att$energy_densite <- (Carnets_Nov_22_att$KCAL_SANS_BOISSON/(Carnets_Nov_22_att$SOMME_CARNET_HORS_BOISSON*1000))
+Carnets_Nov_22_att$energy_densite <- Carnets_Nov_22_att$energy_densite*100
+
+
+Carnets_Nov_23_att$energy_densite <- (Carnets_Nov_23_att$KCAL_SANS_BOISSON/(Carnets_Nov_23_att$SOMME_CARNET_HORS_BOISSON*1000))
+Carnets_Nov_23_att$energy_densite <- Carnets_Nov_23_att$energy_densite*100
+
 
 
 Carnets_att <- rbind(
@@ -290,6 +290,23 @@ Carnets_att <- rbind(
 Carnets_att <- left_join(Carnets_att, Liste, by="Identifiant")
 library(dplyr)
 library(stringr)
+
+
+# How many rows have a missing group?
+sum(is.na(Carnets_att$groupe))
+
+# Which identifiers are affected?
+Carnets_att %>%
+  filter(is.na(groupe)) %>%
+  select(Identifiant)
+
+# Check whether they are indeed absent from Liste
+Carnets_att %>%
+  filter(is.na(groupe)) %>%
+  pull(Identifiant) %in% Liste$Identifiant
+
+
+
 
 
 Carnets_att <- Carnets_att %>%
@@ -306,76 +323,70 @@ Carnets_att$VIANDES_POIDS <- Carnets_att$VIANDE_ROUGE_POIDS + Carnets_att$POULET
 Carnets_att$MG_POIDS <- Carnets_att$MGA_POIDS + Carnets_att$MGV_POIDS
 Carnets_att$PDTS_DISCRETIONNAIRES_POIDS <-   Carnets_att$CEREALES_PD_POIDS + Carnets_att$DESSERTS_LACTES_POIDS + Carnets_att$PDTS_SUCRES_POIDS + Carnets_att$SAUCES_POIDS  + Carnets_att$SNACKS_AUTRES_POIDS 
 Carnets_att$SSB_POIDS <-  Carnets_att$SODAS_SUCRES_POIDS + Carnets_att$SODAS_LIGHT_POIDS +Carnets_att$FRUITS_JUS_POIDS 
-#Ajouter les variables energy densite / POids Kcal et BUdget total
-
-Carnets_att$SOMME_POIDS_KCAL <-  Carnets_att$SOMME_CARNET_KCAL
-Carnets_att$energy_densite <- (Carnets_att$KCAL_SANS_BOISSON/(Carnets_att$SOMME_CARNET_HORS_BOISSON*1000))
-Carnets_att$energy_densite <- Carnets_att$energy_densite*100
-Carnets_att$depense_alim_uc <- Carnets_att$Dépense_alim/ Carnets_att$UC_TI
 
 
 
 Carnets_att$Situation_emploi <- ifelse(( Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Autre inactif (invalide, handicapé, en congé maladie > 3 mois, titulaire d’une pension de réversion)"|
-                                       Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Chômeur inscrit ou non au Pôle-Emploi"|  Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.=="Femme ou homme au foyer (y compris congé parental)" |
-                                       Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.==  "Situation administrative ne permettant pas de travailler" ),
-                                   ("Inactif(ve)"), (Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.))
+                                           Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Chômeur inscrit ou non au Pôle-Emploi"|  Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.=="Femme ou homme au foyer (y compris congé parental)" |
+                                           Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.==  "Situation administrative ne permettant pas de travailler" ),
+                                       ("Inactif(ve)"), (Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.))
 
 Carnets_att$Situation_emploi <- ifelse(( Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Refuse de répondre"|
-                                       Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.==  "Ne sait pas" ),
-                                   ("Autre"), (Carnets_att$Situation_emploi))
+                                           Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.==  "Ne sait pas" ),
+                                       ("Autre"), (Carnets_att$Situation_emploi))
 
 Carnets_att$Situation_emploi <- ifelse(Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Etudiant, élève, en formation, en stage non rémunéré",
-                                   ("Etudiant(e)"), (Carnets_att$Situation_emploi))
+                                       ("Etudiant(e)"), (Carnets_att$Situation_emploi))
 
 Carnets_att$Situation_emploi <- ifelse(Carnets_att$Quelle.est.votre.situation.professionnelle.actuelle.== "Retraitée ancien salarié ou préretraitée",
-                                   ("Retraité(e)"), (Carnets_att$Situation_emploi))
+                                       ("Retraité(e)"), (Carnets_att$Situation_emploi))
 
 Carnets_att$Source_revenu <- ifelse(( Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Minimas sociaux (RSA, Allocations familiales...)"|
-                                    Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Indemnités chômage" ),
-                                ("Aides sociales"), (Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.))
+                                        Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Indemnités chômage" ),
+                                    ("Aides sociales"), (Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.))
 
 Carnets_att$Source_revenu <- ifelse(( Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Ne sait pas"|
-                                    Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Ne veut pas répondre" |
-                                    Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Autre" |
-                                    Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Refuse de répondre" ),
-                                ("Autre"), (Carnets_att$Source_revenu))
+                                        Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Ne veut pas répondre" |
+                                        Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Autre" |
+                                        Carnets_att$Quelle.est.dans.votre.foyer.la.principale.source.de.revenu.== "Refuse de répondre" ),
+                                    ("Autre"), (Carnets_att$Source_revenu))
 
 Carnets_att$Source_revenu <- ifelse(( Carnets_att$Source_revenu== "Travail (salarié, autoentrepreneur...)"),
-                                ("Travail"), (Carnets_att$Source_revenu))
+                                    ("Travail"), (Carnets_att$Source_revenu))
 
 
 Carnets_att$Education <- ifelse(( Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "BTS, DUT, DEST, DEUG y compris formation paramédicale ou sociale"|
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "2e ou 3e cycle universitaire, grande école") ,
-                            ("Université"), (Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.))
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "2e ou 3e cycle universitaire, grande école") ,
+                                ("Université"), (Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.))
 
 
 Carnets_att$Education <- ifelse(( Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Baccalauréat"|
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Baccalauréat technologique ou professionnel" ) ,
-                            ("Baccalauréat"), (Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.))
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Baccalauréat technologique ou professionnel" ) ,
+                                ("Baccalauréat"), (Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.))
 
 Carnets_att$Education <- ifelse(( Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Diplôme en-dessous du baccalauréat"|
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "CAP, BEP, BEPC, brevet élémentaire, BEPS" |
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Brevet de technicien, Brevet Professionnel (BP), BEI, BEC, BEA" |
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Certificat d'études primaires (CEP), diplôme de fin d'études obligatoire") ,
-                            ("Diplôme en dessous du baccalauréat"), (Carnets_att$Education))
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "CAP, BEP, BEPC, brevet élémentaire, BEPS" |
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Brevet de technicien, Brevet Professionnel (BP), BEI, BEC, BEA" |
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Certificat d'études primaires (CEP), diplôme de fin d'études obligatoire") ,
+                                ("Diplôme en dessous du baccalauréat"), (Carnets_att$Education))
 
 Carnets_att$Education <- ifelse(( Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Ne sait pas"|
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Refuse de répondre" |
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Autre" |
-                                Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Ne veut pas répondre"|
-                                is.na(Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.)) ,
-                            ("Autre"), (Carnets_att$Education))
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Refuse de répondre" |
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Autre" |
+                                    Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.== "Ne veut pas répondre"|
+                                    is.na(Carnets_att$Quel.est.le.diplôme.d.enseignement.general.ou.technique.le.plus.eleve.que.vous.ayez.obtenu.)) ,
+                                ("Autre"), (Carnets_att$Education))
 
 
 
-sgsdata <- read.xlsx("Données analysées - Article N°1 chèques/Fichiers_nettoyés/Fichier_traitement/sgsdata.xlsx")
+sgsdata <- read.xlsx("sgsdata.xlsx")
 data <- sgsdata %>%  filter(!is.na(Mesure),Mesure == "Carnet",Identifiant != "LE300",Periode == 0) %>% mutate(across(where(is.character), ~na_if(.x, "")))
 library(dplyr)
 
-# 1️⃣ Identifier les identifiants communs
+# 1️⃣ Identify the common identifiers
 ids_communs <- intersect(data$Identifiant, Carnets_att$Identifiant)
 
-# 2️⃣ Comparer les groupes entre les deux tableaux
+# 2️⃣ Compare the groups between the two tables
 verif_groupes <- data %>%
   dplyr::filter(Identifiant %in% ids_communs) %>%
   dplyr::mutate(groupe_data = groupe) %>%
@@ -387,11 +398,11 @@ verif_groupes <- data %>%
     by = "Identifiant"
   )
 
-# 3️⃣ Identifier les divergences de groupe
+# 3️⃣ Identify the group discrepancies
 divergents <- verif_groupes %>%
   dplyr::filter(groupe_data != groupe_att)
 
-# 4️⃣ Vérification
+# 4️⃣ Check
 if (nrow(divergents) == 0) {
   message("✅ Tous les identifiants communs appartiennent bien au même groupe.")
 } else {
@@ -400,7 +411,7 @@ if (nrow(divergents) == 0) {
 }
 
 
-#Créer une colonne attrition 
+#Create an attrition column 
 Carnets_att <- Carnets_att %>%
   mutate(
     attrition = if_else(Identifiant %in% data$Identifiant, 1, 0)
@@ -408,7 +419,7 @@ Carnets_att <- Carnets_att %>%
 
 
 
-# --- Fonction générique reprise ---
+# --- Generic function reused ---
 make_attrition_table <- function(df, group_label = "groupe inconnu") {
   cont_vars_here <- intersect(cont_vars, names(df))
   df <- df %>% mutate(across(all_of(cont_vars_here), ~ suppressWarnings(as.numeric(.x))))
@@ -481,26 +492,26 @@ make_attrition_table <- function(df, group_label = "groupe inconnu") {
     select(Variable, Attr0, Attr1, p_value)
 }
 
-# --- 1) Groupe = 1, toute l'expérience ---
+# --- 1) Groupe = 1, entire experiment ---
 data_g1 <- Carnets_att %>%
   filter(groupe == 1, !is.na(attrition)) %>%
   mutate(across(where(is.character), ~ na_if(.x, "")))
 tab_attrition_g1 <- make_attrition_table(data_g1, group_label = "Groupe 1 (toute expérience)")
 
-# --- 1) Groupe = 0, toute l'expérience ---
+# --- 1) Groupe = 0, entire experiment ---
 data_g0 <- Carnets_att %>%
   filter(groupe == 0, !is.na(attrition)) %>%
   mutate(across(where(is.character), ~ na_if(.x, "")))
 tab_attrition_g0 <- make_attrition_table(data_g0, group_label = "Groupe 0 (toute expérience)") 
 
-# --- 2) Groupe = 1, uniquement identifiants 'LE' ---
+# --- 2) Groupe = 1, only 'LE' identifiers ---
 data_g1_LE <- Carnets_att %>%
   filter(groupe == 1, !is.na(attrition), str_detect(Identifiant, "^LE")) %>%
   mutate(across(where(is.character), ~ na_if(.x, "")))
 tab_attrition_g1_LE <- make_attrition_table(data_g1_LE, group_label = "Groupe 1 — Identifiants 'LE'")
 
 
-# --- 2) Groupe = 1, uniquement identifiants 'LE' ---
+# --- 2) Groupe = 1, only 'LE' identifiers ---
 data_g0_LE <- Carnets_att %>%
   filter(groupe == 0, !is.na(attrition), str_detect(Identifiant, "^LE")) %>%
   mutate(across(where(is.character), ~ na_if(.x, "")))
@@ -512,7 +523,7 @@ library(purrr)
 library(stringr)
 library(tibble)
 
-# --- Helpers communs ---
+# --- Common helpers ---
 p_from_2x2 <- function(a, b, c, d) {
   mat <- matrix(c(a,b,c,d), nrow = 2, byrow = TRUE)
   if (any(mat < 5)) as.numeric(tryCatch(fisher.test(mat)$p.value, error = function(e) NA_real_))
@@ -522,12 +533,12 @@ val_eq <- function(x, target) str_trim(str_to_lower(as.character(x))) == str_tri
 is_yes <- function(x) str_to_upper(as.character(x)) %in% c("OUI","1","TRUE","YES")
 is_one <- function(x) suppressWarnings(as.numeric(x)) == 1
 
-# --- Nouvelle fonction de balance par groupe (0 vs 1), sans attrition ---
+# --- New group balance function (0 vs 1), without attrition ---
 make_group_balance_table <- function(df, subset_label = "") {
   stopifnot("groupe" %in% names(df))
   df <- df %>% mutate(across(where(is.character), ~na_if(.x, "")))
   
-  # Continues
+  # Continuous
   cont_vars_here <- intersect(cont_vars, names(df))
   df <- df %>% mutate(across(all_of(cont_vars_here), ~ suppressWarnings(as.numeric(.x))))
   
@@ -545,7 +556,7 @@ make_group_balance_table <- function(df, subset_label = "") {
       p_value = map_dbl(Variable, ~ p_cont(df[[.x]], df$groupe))
     )
   
-  # Catégorielles (définies comme indicateurs 0/1)
+  # Categorical (defined as 0/1 indicators)
   cat_list <- list()
   if ("Sexe" %in% names(df))                              cat_list[["Gender-Women (%)"]]            <- val_eq(df$Sexe, "Femme")
   if ("Quel.est.votre.pays.de.naissance." %in% names(df)) cat_list[["Birth place - France (%)"]]    <- val_eq(df$Quel.est.votre.pays.de.naissance., "France")
@@ -583,7 +594,7 @@ make_group_balance_table <- function(df, subset_label = "") {
     p_value  = NA_real_
   )
   
-  # Harmoniser noms colonnes entre cont_tbl et cat_tbl
+  # Harmonizing column names between cont_tbl and cat_tbl
   cont_tbl <- cont_tbl %>% rename(G0 = G0_mean, G1 = G1_mean)
   
   bind_rows(totals, cat_tbl, cont_tbl) %>%
@@ -595,19 +606,19 @@ make_group_balance_table <- function(df, subset_label = "") {
     select(Variable, G0, G1, p_value)
 }
 
-# --- 1) Comparaison groupes 0 vs 1 : toute l’expérience, sans attrition ---
+# --- 1) Comparing groups 0 vs 1: entire experiment, without attrition ---
 tab_balance_all <- Carnets_att %>%
   filter(!is.na(groupe)) %>%
   make_group_balance_table(subset_label = "(toute l'expérience)")
 
-# --- 2) Comparaison groupes 0 vs 1 : sous-échantillon LE ---
-#    (via identifiants commençant par "LE" ; adapte si tu préfères 'voie_de_recrutement == "LE"')
+# --- 2) Comparing groups 0 vs 1: LE subsample ---
+#    (via identifiers starting with "LE" ; adapt if you prefer 'voie_de_recrutement == "LE"')
 tab_balance_LE <- Carnets_att %>%
   filter(!is.na(groupe), str_detect(Identifiant, "^LE")) %>%
   make_group_balance_table(subset_label = "(voie_de_recrutement = 'LE')")
 
 
-#Telechargement 
+#Download 
 options(scipen = 999)
 wb <- createWorkbook()
 
@@ -634,5 +645,4 @@ writeData(wb, sheet = "tab_attrition_g1_LE", tab_attrition_g1_LE, colNames = TRU
 
 saveWorkbook(wb, "resultats_attrition.xlsx", overwrite = TRUE)
 
-saveWorkbook(wb,(paste0("Données analysées - Article N°1 chèques/Publis/resultats_attrition.xlsx")))
-
+saveWorkbook(wb,(paste0("resultats_attrition.xlsx")))
